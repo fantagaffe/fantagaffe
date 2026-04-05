@@ -206,9 +206,86 @@
       nav button { font-size: 0.8rem; padding: 6px 12px; }
       main { padding: 12px; }
     }
+
+    /* MODALE MODIFICA */
+    .modale-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modale-overlay.aperta { display: flex; }
+    .modale {
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 14px;
+      padding: 28px;
+      width: 100%;
+      max-width: 520px;
+      margin: 16px;
+    }
+    .modale h3 { color: #f5c518; margin-bottom: 20px; font-size: 1.1rem; }
+    .modale-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
   </style>
 </head>
 <body>
+
+<!-- MODALE MODIFICA POLITICO -->
+<div class="modale-overlay" id="modale-modifica">
+  <div class="modale">
+    <h3>✏️ Modifica politico</h3>
+    <input type="hidden" id="m-id" />
+    <div class="form-row">
+      <div style="flex:1;min-width:130px">
+        <label>Nome *</label>
+        <input id="m-nome" placeholder="es. Giorgia" />
+      </div>
+      <div style="flex:1;min-width:130px">
+        <label>Cognome *</label>
+        <input id="m-cognome" placeholder="es. Meloni" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div style="flex:2;min-width:180px">
+        <label>Partito</label>
+        <input id="m-partito" placeholder="es. Fratelli d'Italia" />
+      </div>
+      <div style="flex:1;min-width:80px">
+        <label>Lire</label>
+        <input id="m-costo" type="number" min="1" max="100" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div style="flex:1">
+        <label>Ruolo attuale</label>
+        <input id="m-ruolo" placeholder="es. Presidente del Consiglio" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div style="flex:1">
+        <label>URL immagine</label>
+        <input id="m-immagine" placeholder="https://..." />
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>Disponibile</label>
+        <select id="m-disponibile">
+          <option value="true">✅ Sì</option>
+          <option value="false">❌ No</option>
+        </select>
+      </div>
+    </div>
+    <div id="msg-modifica" class="msg"></div>
+    <div class="modale-footer">
+      <button class="btn" style="background:#333;color:#fff" onclick="chiudiModale()">Annulla</button>
+      <button class="btn btn-primary" onclick="salvaPolitico()">💾 Salva modifiche</button>
+    </div>
+  </div>
+</div>
 
 <!-- SCHERMATA LOGIN -->
 <div id="login-screen">
@@ -518,6 +595,10 @@
                   </span>
                 </td>
                 <td style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="btn btn-sm" style="background:#1a3a5c;color:#7ec8e3"
+                    onclick="apriModifica(${JSON.stringify(p).replace(/'/g, '&#39;')})">
+                    ✏️ Modifica
+                  </button>
                   <button class="btn btn-sm" style="background:#333;color:#fff"
                     onclick="toggleDisponibile('${p.id}', ${p.disponibile})">
                     ${p.disponibile ? 'Disabilita' : 'Abilita'}
@@ -579,6 +660,58 @@
       caricaPolitici();
     } catch(e) {
       alert('Errore: ' + e.message);
+    }
+  }
+
+  function apriModifica(p) {
+    document.getElementById('m-id').value = p.id;
+    document.getElementById('m-nome').value = p.nome || '';
+    document.getElementById('m-cognome').value = p.cognome || '';
+    document.getElementById('m-partito').value = p.partito || '';
+    document.getElementById('m-ruolo').value = p.ruolo_attuale || '';
+    document.getElementById('m-costo').value = p.costo_lire || 10;
+    document.getElementById('m-immagine').value = p.immagine_url || '';
+    document.getElementById('m-disponibile').value = p.disponibile ? 'true' : 'false';
+    document.getElementById('msg-modifica').className = 'msg';
+    document.getElementById('modale-modifica').classList.add('aperta');
+  }
+
+  function chiudiModale() {
+    document.getElementById('modale-modifica').classList.remove('aperta');
+  }
+
+  async function salvaPolitico() {
+    const msg = document.getElementById('msg-modifica');
+    msg.className = 'msg';
+    const id = document.getElementById('m-id').value;
+    const nome = document.getElementById('m-nome').value.trim();
+    const cognome = document.getElementById('m-cognome').value.trim();
+    if (!nome || !cognome) {
+      msg.textContent = 'Nome e cognome sono obbligatori.';
+      msg.className = 'msg err';
+      return;
+    }
+    try {
+      await db(`politici?id=eq.${id}`, {
+        method: 'PATCH',
+        body: {
+          nome,
+          cognome,
+          partito: document.getElementById('m-partito').value.trim() || null,
+          ruolo_attuale: document.getElementById('m-ruolo').value.trim() || null,
+          costo_lire: parseInt(document.getElementById('m-costo').value) || 10,
+          immagine_url: document.getElementById('m-immagine').value.trim() || null,
+          disponibile: document.getElementById('m-disponibile').value === 'true',
+          ultimo_aggiornamento: new Date().toISOString()
+        }
+      });
+      msg.textContent = '✅ Salvato.';
+      msg.className = 'msg ok';
+      setTimeout(() => chiudiModale(), 800);
+      caricaPolitici();
+    } catch(e) {
+      msg.textContent = 'Errore: ' + e.message;
+      msg.className = 'msg err';
     }
   }
 
