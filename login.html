@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FantaGaffe – Accedi</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2e2e4e;
+      border-radius: 16px;
+      padding: 40px 32px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+    .logo {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #e8c84a;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+    }
+    .tagline {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 32px;
+    }
+    label {
+      display: block;
+      text-align: left;
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-bottom: 4px;
+      margin-top: 16px;
+    }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      background: #12122a;
+      border: 1px solid #2e2e4e;
+      border-radius: 8px;
+      color: #f0f0f0;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input:focus { border-color: #e8c84a; }
+    button {
+      margin-top: 28px;
+      width: 100%;
+      padding: 14px;
+      background: #e8c84a;
+      color: #0f0f1a;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #f0d760; }
+    button:disabled { background: #555; color: #999; cursor: not-allowed; }
+    .link-recupero {
+      display: block;
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: #888;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .link-recupero:hover { color: #e8c84a; }
+    .messaggio {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
+    }
+    .messaggio.errore {
+      background: #2a1010;
+      border: 1px solid #a33;
+      color: #f88;
+      display: block;
+    }
+    .messaggio.successo {
+      background: #0f2a1a;
+      border: 1px solid #3a3;
+      color: #8f8;
+      display: block;
+    }
+    .schermata { display: none; }
+    .schermata.attiva { display: block; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">FantaGaffe</div>
+  <div class="tagline">Il fantasy game della politica italiana</div>
+
+  <!-- SCHERMATA LOGIN -->
+  <div id="schermata-login" class="schermata attiva">
+    <label>Email</label>
+    <input type="email" id="email" placeholder="La tua email" />
+    <label>Password</label>
+    <input type="password" id="password" placeholder="La tua password" />
+    <button id="btn-login" onclick="accedi()">Accedi</button>
+    <span class="link-recupero" onclick="mostraRecupero()">Password dimenticata?</span>
+  </div>
+
+  <!-- SCHERMATA RECUPERO PASSWORD -->
+  <div id="schermata-recupero" class="schermata">
+    <p style="color:#aaa; font-size:0.9rem; margin-bottom:16px; text-align:left;">
+      Inserisci la tua email. Ti mandiamo un link per reimpostare la password.
+    </p>
+    <label>Email</label>
+    <input type="email" id="email-recupero" placeholder="La tua email" />
+    <button id="btn-recupero" onclick="recuperaPassword()">Invia link di recupero</button>
+    <span class="link-recupero" onclick="mostraLogin()">Torna al login</span>
+  </div>
+
+  <div id="messaggio" class="messaggio"></div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://shkrdjqqeradgsucrfib.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_89Ud7G2jsQNeycUg8XRe8g_AcS8OV6Y';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Se l'utente è già loggato, reindirizza subito
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      reindirizzaDopoLogin(session.user.id);
+    }
+  });
+
+  async function accedi() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!email || !password) {
+      mostraErrore('Inserisci email e password.');
+      return;
+    }
+
+    const btn = document.getElementById('btn-login');
+    btn.disabled = true;
+    btn.textContent = 'Accesso in corso...';
+    nascondiMessaggio();
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      if (error.message.includes('Invalid login credentials')) {
+        mostraErrore('Email o password non corretti.');
+      } else if (error.message.includes('Email not confirmed')) {
+        mostraErrore('Devi prima confermare la tua email. Controlla la tua casella di posta.');
+      } else {
+        mostraErrore('Errore di accesso: ' + error.message);
+      }
+      btn.disabled = false;
+      btn.textContent = 'Accedi';
+      return;
+    }
+
+    await reindirizzaDopoLogin(data.user.id);
+  }
+
+  async function reindirizzaDopoLogin(userId) {
+    // Controlla se l'utente ha già completato l'onboarding
+    const { data: profilo, error } = await supabase
+      .from('users')
+      .select('fascia_eta, professione, citta, onboarding_completato')
+      .eq('id', userId)
+      .single();
+
+    if (error || !profilo) {
+      // Se non trova il profilo, manda all'onboarding
+      window.location.href = 'onboarding.html';
+      return;
+    }
+
+    if (!profilo.onboarding_completato) {
+      window.location.href = 'onboarding.html';
+    } else {
+      window.location.href = 'dashboard.html';
+    }
+  }
+
+  async function recuperaPassword() {
+    const email = document.getElementById('email-recupero').value.trim();
+
+    if (!email) {
+      mostraErrore('Inserisci la tua email.');
+      return;
+    }
+
+    const btn = document.getElementById('btn-recupero');
+    btn.disabled = true;
+    btn.textContent = 'Invio in corso...';
+    nascondiMessaggio();
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://fantagaffe.github.io/fantagaffe/reset-password.html'
+    });
+
+    btn.disabled = false;
+    btn.textContent = 'Invia link di recupero';
+
+    if (error) {
+      mostraErrore('Errore nell\'invio: ' + error.message);
+      return;
+    }
+
+    mostraSuccesso('Email inviata! Controlla la tua casella di posta e clicca il link per reimpostare la password.');
+  }
+
+  function mostraRecupero() {
+    nascondiMessaggio();
+    document.getElementById('schermata-login').classList.remove('attiva');
+    document.getElementById('schermata-recupero').classList.add('attiva');
+  }
+
+  function mostraLogin() {
+    nascondiMessaggio();
+    document.getElementById('schermata-recupero').classList.remove('attiva');
+    document.getElementById('schermata-login').classList.add('attiva');
+  }
+
+  function mostraErrore(msg) {
+    const el = document.getElementById('messaggio');
+    el.textContent = msg;
+    el.className = 'messaggio errore';
+  }
+
+  function mostraSuccesso(msg) {
+    const el = document.getElementById('messaggio');
+    el.textContent = msg;
+    el.className = 'messaggio successo';
+  }
+
+  function nascondiMessaggio() {
+    const el = document.getElementById('messaggio');
+    el.className = 'messaggio';
+  }
+
+  // Login con tasto Invio
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      const schermataLogin = document.getElementById('schermata-login');
+      if (schermataLogin.classList.contains('attiva')) {
+        accedi();
+      }
+    }
+  });
+</script>
+</body>
+</html>
