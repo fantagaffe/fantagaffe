@@ -596,7 +596,15 @@
                 </td>
                 <td style="display:flex;gap:6px;flex-wrap:wrap">
                   <button class="btn btn-sm" style="background:#1a3a5c;color:#7ec8e3"
-                    onclick="apriModifica(${JSON.stringify(p).replace(/'/g, '&#39;')})">
+                    data-id="${p.id}"
+                    data-nome="${(p.nome||'').replace(/"/g,'&quot;')}"
+                    data-cognome="${(p.cognome||'').replace(/"/g,'&quot;')}"
+                    data-partito="${(p.partito||'').replace(/"/g,'&quot;')}"
+                    data-ruolo="${(p.ruolo_attuale||'').replace(/"/g,'&quot;')}"
+                    data-costo="${p.costo_lire||10}"
+                    data-immagine="${(p.immagine_url||'').replace(/"/g,'&quot;')}"
+                    data-disponibile="${p.disponibile}"
+                    onclick="apriModifica(this)">
                     ✏️ Modifica
                   </button>
                   <button class="btn btn-sm" style="background:#333;color:#fff"
@@ -663,15 +671,16 @@
     }
   }
 
-  function apriModifica(p) {
-    document.getElementById('m-id').value = p.id;
-    document.getElementById('m-nome').value = p.nome || '';
-    document.getElementById('m-cognome').value = p.cognome || '';
-    document.getElementById('m-partito').value = p.partito || '';
-    document.getElementById('m-ruolo').value = p.ruolo_attuale || '';
-    document.getElementById('m-costo').value = p.costo_lire || 10;
-    document.getElementById('m-immagine').value = p.immagine_url || '';
-    document.getElementById('m-disponibile').value = p.disponibile ? 'true' : 'false';
+  function apriModifica(btn) {
+    const d = btn.dataset;
+    document.getElementById('m-id').value = d.id;
+    document.getElementById('m-nome').value = d.nome || '';
+    document.getElementById('m-cognome').value = d.cognome || '';
+    document.getElementById('m-partito').value = d.partito || '';
+    document.getElementById('m-ruolo').value = d.ruolo || '';
+    document.getElementById('m-costo').value = d.costo || 10;
+    document.getElementById('m-immagine').value = d.immagine || '';
+    document.getElementById('m-disponibile').value = d.disponibile === 'true' ? 'true' : 'false';
     document.getElementById('msg-modifica').className = 'msg';
     document.getElementById('modale-modifica').classList.add('aperta');
   }
