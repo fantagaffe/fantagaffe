@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FantaGaffe – Completa il profilo</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2e2e4e;
+      border-radius: 16px;
+      padding: 40px 32px;
+      max-width: 480px;
+      width: 100%;
+    }
+    .logo {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #e8c84a;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .tagline {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .intro {
+      background: #12122a;
+      border-left: 4px solid #e8c84a;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 28px;
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2e2e4e;
+      transition: background 0.3s;
+    }
+    .step-dot.attivo { background: #e8c84a; }
+    .step-dot.completato { background: #4a8a5a; }
+    .step { display: none; }
+    .step.attivo { display: block; }
+    .step-titolo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #e8c84a;
+      margin-bottom: 6px;
+    }
+    .step-sottotitolo {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      text-align: left;
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-bottom: 4px;
+      margin-top: 16px;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      background: #12122a;
+      border: 1px solid #2e2e4e;
+      border-radius: 8px;
+      color: #f0f0f0;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    input:focus, select:focus { border-color: #e8c84a; }
+    select option { background: #1a1a2e; color: #f0f0f0; }
+    .opzioni-griglia {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .opzione-btn {
+      padding: 12px 10px;
+      background: #12122a;
+      border: 1px solid #2e2e4e;
+      border-radius: 8px;
+      color: #ccc;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .opzione-btn:hover { border-color: #e8c84a; color: #e8c84a; }
+    .opzione-btn.selezionato {
+      background: #2a2510;
+      border-color: #e8c84a;
+      color: #e8c84a;
+      font-weight: 600;
+    }
+    .checkbox-area {
+      margin-top: 20px;
+      background: #12122a;
+      border: 1px solid #2e2e4e;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .checkbox-riga {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+    }
+    .checkbox-riga input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      margin-top: 2px;
+      accent-color: #e8c84a;
+      cursor: pointer;
+    }
+    .checkbox-testo {
+      font-size: 0.85rem;
+      color: #ccc;
+      line-height: 1.5;
+    }
+    .avviso-consenso {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: #e8844a;
+      display: none;
+      padding: 8px 12px;
+      background: #2a1505;
+      border-radius: 6px;
+      border: 1px solid #e8844a;
+    }
+    .btn-avanti {
+      margin-top: 28px;
+      width: 100%;
+      padding: 14px;
+      background: #e8c84a;
+      color: #0f0f1a;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-avanti:hover { background: #f0d760; }
+    .btn-avanti:disabled { background: #555; color: #999; cursor: not-allowed; }
+    .btn-indietro {
+      margin-top: 12px;
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      color: #888;
+      font-size: 0.9rem;
+      border: 1px solid #2e2e4e;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-indietro:hover { border-color: #888; color: #ccc; }
+    .messaggio {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
+    }
+    .messaggio.errore {
+      background: #2a1010;
+      border: 1px solid #a33;
+      color: #f88;
+      display: block;
+    }
+    .messaggio.successo {
+      background: #0f2a1a;
+      border: 1px solid #3a3;
+      color: #8f8;
+      display: block;
+    }
+    .loading {
+      text-align: center;
+      color: #888;
+      font-size: 0.9rem;
+      padding: 40px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">FantaGaffe</div>
+  <div class="tagline">Il fantasy game della politica italiana</div>
+
+  <div id="loading" class="loading">Caricamento...</div>
+
+  <div id="contenuto-onboarding" style="display:none">
+    <div class="intro">
+      Ci siamo quasi! Poche domande per completare il tuo profilo. Ci vogliono meno di un minuto.
+    </div>
+
+    <div class="step-indicator">
+      <div class="step-dot attivo" id="dot-0"></div>
+      <div class="step-dot" id="dot-1"></div>
+      <div class="step-dot" id="dot-2"></div>
+      <div class="step-dot" id="dot-3"></div>
+      <div class="step-dot" id="dot-4"></div>
+    </div>
+
+    <!-- STEP 0: Fascia d'età -->
+    <div class="step attivo" id="step-0">
+      <div class="step-titolo">Quanti anni hai?</div>
+      <div class="step-sottotitolo">Scegli la tua fascia d'età</div>
+      <div class="opzioni-griglia">
+        <div class="opzione-btn" onclick="selezionaOpzione('fascia_eta', '18-25', this)">18 – 25</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('fascia_eta', '26-35', this)">26 – 35</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('fascia_eta', '36-45', this)">36 – 45</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('fascia_eta', '46-55', this)">46 – 55</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('fascia_eta', '56-65', this)">56 – 65</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('fascia_eta', '66+', this)">66+</div>
+      </div>
+      <button class="btn-avanti" onclick="avanti(0)">Avanti</button>
+    </div>
+
+    <!-- STEP 1: Professione -->
+    <div class="step" id="step-1">
+      <div class="step-titolo">Cosa fai nella vita?</div>
+      <div class="step-sottotitolo">Scegli la tua professione</div>
+      <div class="opzioni-griglia">
+        <div class="opzione-btn" onclick="selezionaOpzione('professione', 'Studente', this)">Studente</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('professione', 'Dipendente pubblico', this)">Dipendente pubblico</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('professione', 'Dipendente privato', this)">Dipendente privato</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('professione', 'Libero professionista', this)">Libero professionista</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('professione', 'Imprenditore', this)">Imprenditore</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('professione', 'Pensionato', this)">Pensionato</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('professione', 'Disoccupato', this)">Disoccupato</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('professione', 'Casalingo/a', this)">Casalingo/a</div>
+      </div>
+      <button class="btn-avanti" onclick="avanti(1)">Avanti</button>
+      <button class="btn-indietro" onclick="indietro(1)">Indietro</button>
+    </div>
+
+    <!-- STEP 2: Paese di residenza -->
+    <div class="step" id="step-2">
+      <div class="step-titolo">Dove vivi?</div>
+      <div class="step-sottotitolo">Seleziona il tuo paese di residenza</div>
+      <label>Paese</label>
+      <select id="paese" onchange="aggiornaCitta()">
+        <option value="">— Seleziona paese —</option>
+        <option value="Italia">Italia</option>
+        <option value="Germania">Germania</option>
+        <option value="Francia">Francia</option>
+        <option value="Spagna">Spagna</option>
+        <option value="Regno Unito">Regno Unito</option>
+        <option value="Svizzera">Svizzera</option>
+        <option value="Belgio">Belgio</option>
+        <option value="Paesi Bassi">Paesi Bassi</option>
+        <option value="Austria">Austria</option>
+        <option value="Svezia">Svezia</option>
+        <option value="Norvegia">Norvegia</option>
+        <option value="Danimarca">Danimarca</option>
+        <option value="Portogallo">Portogallo</option>
+        <option value="Irlanda">Irlanda</option>
+        <option value="Lussemburgo">Lussemburgo</option>
+        <option value="Stati Uniti">Stati Uniti</option>
+        <option value="Canada">Canada</option>
+        <option value="Australia">Australia</option>
+        <option value="Nuova Zelanda">Nuova Zelanda</option>
+        <option value="Brasile">Brasile</option>
+        <option value="Argentina">Argentina</option>
+        <option value="Altro">Altro paese</option>
+      </select>
+      <label>Città</label>
+      <input type="text" id="citta" placeholder="La tua città" />
+      <button class="btn-avanti" onclick="avanti(2)">Avanti</button>
+      <button class="btn-indietro" onclick="indietro(2)">Indietro</button>
+    </div>
+
+    <!-- STEP 3: Come hai scoperto FantaGaffe -->
+    <div class="step" id="step-3">
+      <div class="step-titolo">Come ci hai trovato?</div>
+      <div class="step-sottotitolo">Come hai scoperto FantaGaffe?</div>
+      <div class="opzioni-griglia">
+        <div class="opzione-btn" onclick="selezionaOpzione('come_scoperto', 'Amico o conoscente', this)">Un amico</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('come_scoperto', 'Instagram', this)">Instagram</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('come_scoperto', 'Facebook', this)">Facebook</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('come_scoperto', 'Twitter/X', this)">Twitter/X</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('come_scoperto', 'TikTok', this)">TikTok</div>
+        <div class="opzione-btn" onclick="selezionaOpzione('come_scoperto', 'Altro', this)">Altro</div>
+      </div>
+      <button class="btn-avanti" onclick="avanti(3)">Avanti</button>
+      <button class="btn-indietro" onclick="indietro(3)">Indietro</button>
+    </div>
+
+    <!-- STEP 4: Consenso marketing -->
+    <div class="step" id="step-4">
+      <div class="step-titolo">Quasi fatto!</div>
+      <div class="step-sottotitolo">Un'ultima cosa prima di entrare in gioco</div>
+      <div class="checkbox-area">
+        <label class="checkbox-riga">
+          <input type="checkbox" id="consenso-marketing" checked onchange="controllaConsenso()" />
+          <span class="checkbox-testo">
+            Accetto di ricevere comunicazioni su FantaGaffe, aggiornamenti settimanali sulla classifica e offerte riservate ai giocatori. Puoi revocare il consenso in qualsiasi momento dal tuo profilo.
+          </span>
+        </label>
+        <div id="avviso-consenso" class="avviso-consenso">
+          Senza il consenso non potrai ricevere la classifica settimanale e gli aggiornamenti di gioco via email.
+        </div>
+      </div>
+      <button class="btn-avanti" id="btn-completa" onclick="completaOnboarding()">Entra in FantaGaffe</button>
+      <button class="btn-indietro" onclick="indietro(4)">Indietro</button>
+    </div>
+  </div>
+
+  <div id="messaggio" class="messaggio"></div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://shkrdjqqeradgsucrfib.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_89Ud7G2jsQNeycUg8XRe8g_AcS8OV6Y';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let userId = null;
+  let dati = {
+    fascia_eta: null,
+    professione: null,
+    paese: null,
+    citta: null,
+    come_scoperto: null,
+    consenso_marketing: true
+  };
+
+  // Controlla se l'utente è loggato
+  async function init() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      window.location.href = 'login.html';
+      return;
+    }
+    userId = session.user.id;
+
+    // Controlla se ha già completato l'onboarding
+    const { data: profilo } = await supabase
+      .from('users')
+      .select('onboarding_completato')
+      .eq('id', userId)
+      .single();
+
+    if (profilo && profilo.onboarding_completato) {
+      window.location.href = 'dashboard.html';
+      return;
+    }
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('contenuto-onboarding').style.display = 'block';
+  }
+
+  function selezionaOpzione(campo, valore, elemento) {
+    // Deseleziona tutti i bottoni dello stesso gruppo
+    const gruppo = elemento.parentElement;
+    gruppo.querySelectorAll('.opzione-btn').forEach(btn => btn.classList.remove('selezionato'));
+    // Seleziona quello cliccato
+    elemento.classList.add('selezionato');
+    dati[campo] = valore;
+  }
+
+  function avanti(stepCorrente) {
+    nascondiMessaggio();
+
+    // Validazioni per ogni step
+    if (stepCorrente === 0 && !dati.fascia_eta) {
+      mostraErrore('Seleziona la tua fascia d\'età.');
+      return;
+    }
+    if (stepCorrente === 1 && !dati.professione) {
+      mostraErrore('Seleziona la tua professione.');
+      return;
+    }
+    if (stepCorrente === 2) {
+      const paese = document.getElementById('paese').value;
+      const citta = document.getElementById('citta').value.trim();
+      if (!paese) {
+        mostraErrore('Seleziona il tuo paese di residenza.');
+        return;
+      }
+      if (!citta) {
+        mostraErrore('Inserisci la tua città.');
+        return;
+      }
+      dati.paese = paese;
+      dati.citta = citta;
+    }
+    if (stepCorrente === 3 && !dati.come_scoperto) {
+      mostraErrore('Seleziona come hai scoperto FantaGaffe.');
+      return;
+    }
+
+    // Vai allo step successivo
+    document.getElementById('step-' + stepCorrente).classList.remove('attivo');
+    document.getElementById('dot-' + stepCorrente).classList.remove('attivo');
+    document.getElementById('dot-' + stepCorrente).classList.add('completato');
+
+    const stepSuccessivo = stepCorrente + 1;
+    document.getElementById('step-' + stepSuccessivo).classList.add('attivo');
+    document.getElementById('dot-' + stepSuccessivo).classList.add('attivo');
+  }
+
+  function indietro(stepCorrente) {
+    nascondiMessaggio();
+    document.getElementById('step-' + stepCorrente).classList.remove('attivo');
+    document.getElementById('dot-' + stepCorrente).classList.remove('attivo');
+
+    const stepPrecedente = stepCorrente - 1;
+    document.getElementById('step-' + stepPrecedente).classList.add('attivo');
+    document.getElementById('dot-' + stepPrecedente).classList.remove('completato');
+    document.getElementById('dot-' + stepPrecedente).classList.add('attivo');
+  }
+
+  function controllaConsenso() {
+    const checkbox = document.getElementById('consenso-marketing');
+    const avviso = document.getElementById('avviso-consenso');
+    dati.consenso_marketing = checkbox.checked;
+    avviso.style.display = checkbox.checked ? 'none' : 'block';
+  }
+
+  function aggiornaCitta() {
+    // Nessuna logica speciale, il campo città rimane libero
+  }
+
+  async function completaOnboarding() {
+    const btn = document.getElementById('btn-completa');
+    btn.disabled = true;
+    btn.textContent = 'Salvataggio in corso...';
+    nascondiMessaggio();
+
+    // Salva tutti i dati nel profilo utente
+    const { error } = await supabase
+      .from('users')
+      .update({
+        fascia_eta: dati.fascia_eta,
+        professione: dati.professione,
+        citta: dati.citta,
+        regione: dati.paese, // usiamo regione per salvare il paese (campo già esistente)
+        come_scoperto: dati.come_scoperto,
+        consenso_marketing: dati.consenso_marketing,
+        onboarding_completato: true
+      })
+      .eq('id', userId);
+
+    if (error) {
+      mostraErrore('Errore nel salvataggio: ' + error.message);
+      btn.disabled = false;
+      btn.textContent = 'Entra in FantaGaffe';
+      return;
+    }
+
+    // Reindirizza alla dashboard
+    window.location.href = 'dashboard.html';
+  }
+
+  function mostraErrore(msg) {
+    const el = document.getElementById('messaggio');
+    el.textContent = msg;
+    el.className = 'messaggio errore';
+  }
+
+  function nascondiMessaggio() {
+    const el = document.getElementById('messaggio');
+    el.className = 'messaggio';
+  }
+
+  init();
+</script>
+</body>
+</html>
