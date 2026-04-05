@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FantaGaffe — Pannello Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    /* LOGIN */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 16px;
+    }
+    #login-screen h1 { font-size: 2rem; color: #f5c518; }
+    #login-screen p { color: #888; }
+    #login-screen input {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #1a1a2e;
+      color: #fff;
+      font-size: 1rem;
+      width: 280px;
+      text-align: center;
+    }
+    #login-screen button {
+      padding: 12px 32px;
+      background: #f5c518;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    #login-error { color: #ff4444; font-size: 0.9rem; }
+
+    /* APP */
+    #app { display: none; }
+
+    header {
+      background: #1a1a2e;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #f5c518;
+    }
+    header h1 { font-size: 1.4rem; color: #f5c518; }
+    header span { font-size: 0.85rem; color: #888; }
+
+    nav {
+      display: flex;
+      gap: 4px;
+      padding: 16px 24px;
+      background: #13132a;
+      border-bottom: 1px solid #222;
+      flex-wrap: wrap;
+    }
+    nav button {
+      padding: 8px 18px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: transparent;
+      color: #aaa;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    nav button.active, nav button:hover {
+      background: #f5c518;
+      color: #000;
+      border-color: #f5c518;
+      font-weight: 700;
+    }
+
+    main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+
+    .sezione { display: none; }
+    .sezione.attiva { display: block; }
+
+    h2 { font-size: 1.3rem; margin-bottom: 20px; color: #f5c518; }
+    h3 { font-size: 1rem; margin-bottom: 12px; color: #ccc; }
+
+    .card {
+      background: #1a1a2e;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #2a2a4a;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .form-row input, .form-row select, .form-row textarea {
+      flex: 1;
+      min-width: 160px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: #0f0f1a;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+    .form-row textarea { min-height: 60px; resize: vertical; }
+    label { font-size: 0.8rem; color: #888; display: block; margin-bottom: 4px; }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #f5c518; color: #000; }
+    .btn-danger { background: #e53935; color: #fff; }
+    .btn-success { background: #2e7d32; color: #fff; }
+    .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+    .msg {
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .msg.ok { background: #1b5e20; color: #a5d6a7; display: block; }
+    .msg.err { background: #b71c1c; color: #ef9a9a; display: block; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th {
+      background: #0f0f1a;
+      padding: 10px 12px;
+      text-align: left;
+      color: #888;
+      font-weight: 600;
+      border-bottom: 1px solid #2a2a4a;
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #1e1e3a;
+      vertical-align: middle;
+    }
+    tr:hover td { background: #1e1e38; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .badge-si { background: #1b5e20; color: #a5d6a7; }
+    .badge-no { background: #b71c1c; color: #ef9a9a; }
+    .badge-attesa { background: #e65100; color: #ffcc80; }
+
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid #444;
+      border-top-color: #f5c518;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty { color: #555; font-style: italic; padding: 20px 0; text-align: center; }
+
+    .punti-badge {
+      display: inline-block;
+      background: #f5c518;
+      color: #000;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 600px) {
+      nav { gap: 6px; }
+      nav button { font-size: 0.8rem; padding: 6px 12px; }
+      main { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SCHERMATA LOGIN -->
+<div id="login-screen">
+  <h1>🇮🇹 FantaGaffe</h1>
+  <p>Pannello Admin</p>
+  <input type="password" id="pwd-input" placeholder="Password admin" />
+  <button onclick="checkPassword()">Entra</button>
+  <span id="login-error"></span>
+</div>
+
+<!-- APP PRINCIPALE -->
+<div id="app">
+  <header>
+    <h1>🇮🇹 FantaGaffe — Admin</h1>
+    <span id="ora-aggiornamento"></span>
+  </header>
+
+  <nav>
+    <button class="active" onclick="mostraSezione('politici', this)">👤 Politici</button>
+    <button onclick="mostraSezione('roster', this)">📋 Roster Settimanale</button>
+    <button onclick="mostraSezione('eventi', this)">⚡ Eventi</button>
+    <button onclick="mostraSezione('utenti', this)">👥 Utenti</button>
+  </nav>
+
+  <main>
+
+    <!-- ======================== SEZIONE POLITICI ======================== -->
+    <div id="sez-politici" class="sezione attiva">
+      <h2>👤 Gestione Politici</h2>
+
+      <div class="card">
+        <h3>Aggiungi nuovo politico</h3>
+        <div id="msg-politico" class="msg"></div>
+        <div class="form-row">
+          <div style="flex:1;min-width:140px">
+            <label>Nome *</label>
+            <input id="p-nome" placeholder="es. Giorgia" />
+          </div>
+          <div style="flex:1;min-width:140px">
+            <label>Cognome *</label>
+            <input id="p-cognome" placeholder="es. Meloni" />
+          </div>
+          <div style="flex:1;min-width:160px">
+            <label>Partito</label>
+            <input id="p-partito" placeholder="es. Fratelli d'Italia" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div style="flex:2;min-width:200px">
+            <label>Ruolo attuale</label>
+            <input id="p-ruolo" placeholder="es. Presidente del Consiglio" />
+          </div>
+          <div style="flex:1;min-width:100px">
+            <label>Costo in Lire *</label>
+            <input id="p-costo" type="number" placeholder="10" value="10" min="1" max="100" />
+          </div>
+          <div style="flex:1;min-width:100px">
+            <label>Disponibile</label>
+            <select id="p-disponibile">
+              <option value="true">✅ Sì</option>
+              <option value="false">❌ No</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div style="flex:1">
+            <label>URL immagine (opzionale)</label>
+            <input id="p-immagine" placeholder="https://..." />
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="aggiungiPolitico()">+ Aggiungi politico</button>
+      </div>
+
+      <div class="card">
+        <h3>Politici nel database <span id="n-politici" style="color:#888;font-size:0.85rem"></span></h3>
+        <div id="lista-politici"><div class="empty"><span class="spinner"></span> Caricamento...</div></div>
+      </div>
+    </div>
+
+    <!-- ======================== SEZIONE ROSTER ======================== -->
+    <div id="sez-roster" class="sezione">
+      <h2>📋 Roster Settimanale</h2>
+
+      <div class="card">
+        <h3>Pubblica roster per una settimana</h3>
+        <div id="msg-roster" class="msg"></div>
+        <p style="color:#888;font-size:0.85rem;margin-bottom:12px">
+          Seleziona la settimana e scegli quali politici rendere disponibili con il loro costo in Lire.
+          Il lunedì è il giorno di inizio settimana.
+        </p>
+        <div class="form-row">
+          <div>
+            <label>Settimana (lunedì) *</label>
+            <input id="r-settimana" type="date" />
+          </div>
+        </div>
+        <div id="roster-politici-lista" style="margin:12px 0"></div>
+        <button class="btn btn-primary" onclick="pubblicaRoster()">📋 Pubblica roster</button>
+      </div>
+
+      <div class="card">
+        <h3>Roster già pubblicati</h3>
+        <div id="lista-roster"><div class="empty"><span class="spinner"></span> Caricamento...</div></div>
+      </div>
+    </div>
+
+    <!-- ======================== SEZIONE EVENTI ======================== -->
+    <div id="sez-eventi" class="sezione">
+      <h2>⚡ Gestione Eventi</h2>
+
+      <div class="card">
+        <h3>Aggiungi evento manualmente</h3>
+        <div id="msg-evento" class="msg"></div>
+        <div class="form-row">
+          <div style="flex:2;min-width:200px">
+            <label>Politico *</label>
+            <select id="e-politico"><option value="">— seleziona —</option></select>
+          </div>
+          <div style="flex:2;min-width:200px">
+            <label>Tipo evento *</label>
+            <select id="e-tipo">
+              <option value="">— seleziona —</option>
+              <option value="talk_show">🎙️ Appare in talk show (+5)</option>
+              <option value="talk_show_doppio">🎙️🎙️ 2+ talk show nella settimana (+4 aggiuntivi)</option>
+              <option value="voto_difforme">🗳️ Voto difforme dal gruppo (+15)</option>
+              <option value="dimissioni">🚪 Dimissioni o rimozione (+20)</option>
+              <option value="smentito_pagella">📰 Smentito da Pagella Politica (+8)</option>
+              <option value="scuse_pubbliche">🙏 Scuse pubbliche verificate (+18)</option>
+              <option value="cambio_partito">🔄 Cambia partito (+12)</option>
+              <option value="voto_sfiducia">⚖️ Voto di sfiducia individuale (+15)</option>
+              <option value="governo_cade">💥 Il governo cade (+15)</option>
+              <option value="rinviato_giudizio">⚖️ Citato/rinviato in giudizio (+10)</option>
+              <option value="post_cancellato">🗑️ Post cancellato (+6)</option>
+              <option value="nuovo_incarico">🏛️ Eletto/nominato a nuovo incarico (+8)</option>
+              <option value="corte_costituzionale">🏛️ Provvedimento bocciato dalla Corte (+12)</option>
+              <option value="sparisce_media">👻 Sparisce dai media una settimana (-3)</option>
+              <option value="smentisce_se_stesso">🔁 Smentisce se stesso (-6)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div style="flex:1;min-width:100px">
+            <label>Punti *</label>
+            <input id="e-punti" type="number" placeholder="es. 5" />
+          </div>
+          <div style="flex:1;min-width:80px">
+            <label>Settimana *</label>
+            <input id="e-settimana" type="date" />
+          </div>
+          <div style="flex:2;min-width:200px">
+            <label>URL fonte *</label>
+            <input id="e-fonte" placeholder="https://ansa.it/..." />
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="aggiungiEvento(false)">+ Aggiungi (in attesa approvazione)</button>
+          <button class="btn btn-success" onclick="aggiungiEvento(true)">✅ Aggiungi e approva subito</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⏳ Eventi in attesa di approvazione</h3>
+        <div id="lista-eventi-attesa"><div class="empty"><span class="spinner"></span> Caricamento...</div></div>
+      </div>
+
+      <div class="card">
+        <h3>✅ Eventi approvati</h3>
+        <div id="lista-eventi-approvati"><div class="empty"><span class="spinner"></span> Caricamento...</div></div>
+      </div>
+    </div>
+
+    <!-- ======================== SEZIONE UTENTI ======================== -->
+    <div id="sez-utenti" class="sezione">
+      <h2>👥 Utenti iscritti</h2>
+      <div class="card">
+        <div id="lista-utenti"><div class="empty"><span class="spinner"></span> Caricamento...</div></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // =============================================
+  // CONFIGURAZIONE
+  // =============================================
+  const SUPABASE_URL = 'https://shkrdjqqeradgsucrfib.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa3JkanFxZXJhZGdzdWNyZmliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNDE2NTAsImV4cCI6MjA5MDkxNzY1MH0.wxfwYednaNxhdpDLKZWuvrTLIt8clVHvmnhgTj8cqtA';
+  const ADMIN_PASSWORD = 'fantagaffe2026';
+
+  const TIPI_EVENTO = {
+    talk_show: { label: 'Appare in talk show', punti: 5 },
+    talk_show_doppio: { label: '2+ talk show nella settimana', punti: 4 },
+    voto_difforme: { label: 'Voto difforme dal gruppo', punti: 15 },
+    dimissioni: { label: 'Dimissioni o rimozione', punti: 20 },
+    smentito_pagella: { label: 'Smentito da Pagella Politica', punti: 8 },
+    scuse_pubbliche: { label: 'Scuse pubbliche verificate', punti: 18 },
+    cambio_partito: { label: 'Cambia partito', punti: 12 },
+    voto_sfiducia: { label: 'Voto di sfiducia individuale', punti: 15 },
+    governo_cade: { label: 'Il governo cade', punti: 15 },
+    rinviato_giudizio: { label: 'Citato/rinviato in giudizio', punti: 10 },
+    post_cancellato: { label: 'Post cancellato', punti: 6 },
+    nuovo_incarico: { label: 'Eletto/nominato a nuovo incarico', punti: 8 },
+    corte_costituzionale: { label: 'Provvedimento bocciato dalla Corte', punti: 12 },
+    sparisce_media: { label: 'Sparisce dai media una settimana', punti: -3 },
+    smentisce_se_stesso: { label: 'Smentisce se stesso', punti: -6 },
+  };
+
+  // =============================================
+  // LOGIN
+  // =============================================
+  function checkPassword() {
+    const val = document.getElementById('pwd-input').value;
+    if (val === ADMIN_PASSWORD) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      inizializza();
+    } else {
+      document.getElementById('login-error').textContent = 'Password errata.';
+    }
+  }
+
+  document.getElementById('pwd-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPassword();
+  });
+
+  // =============================================
+  // API HELPER
+  // =============================================
+  async function db(path, opts = {}) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': opts.prefer || 'return=representation',
+        ...opts.headers
+      },
+      method: opts.method || 'GET',
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || err.details || res.statusText);
+    }
+    const text = await res.text();
+    return text ? JSON.parse(text) : [];
+  }
+
+  // =============================================
+  // NAVIGAZIONE
+  // =============================================
+  function mostraSezione(nome, btn) {
+    document.querySelectorAll('.sezione').forEach(s => s.classList.remove('attiva'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('sez-' + nome).classList.add('attiva');
+    btn.classList.add('active');
+    if (nome === 'politici') caricaPolitici();
+    if (nome === 'roster') { caricaPoliticiPerRoster(); caricaRosterEsistenti(); }
+    if (nome === 'eventi') { caricaEventiAttesa(); caricaEventiApprovati(); caricaPoliticiPerEvento(); }
+    if (nome === 'utenti') caricaUtenti();
+  }
+
+  // =============================================
+  // INIZIALIZZAZIONE
+  // =============================================
+  function inizializza() {
+    document.getElementById('ora-aggiornamento').textContent =
+      'Aggiornato: ' + new Date().toLocaleTimeString('it-IT');
+    caricaPolitici();
+  }
+
+  // =============================================
+  // POLITICI
+  // =============================================
+  async function caricaPolitici() {
+    const el = document.getElementById('lista-politici');
+    try {
+      const dati = await db('politici?order=cognome.asc');
+      document.getElementById('n-politici').textContent = `(${dati.length} totali)`;
+      if (!dati.length) {
+        el.innerHTML = '<div class="empty">Nessun politico ancora. Aggiungine uno sopra.</div>';
+        return;
+      }
+      el.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Partito</th>
+              <th>Ruolo</th>
+              <th>Lire</th>
+              <th>Disponibile</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${dati.map(p => `
+              <tr id="row-p-${p.id}">
+                <td><strong>${p.nome} ${p.cognome}</strong></td>
+                <td>${p.partito || '—'}</td>
+                <td style="font-size:0.8rem;color:#aaa">${p.ruolo_attuale || '—'}</td>
+                <td><span class="punti-badge">${p.costo_lire}</span></td>
+                <td>
+                  <span class="badge ${p.disponibile ? 'badge-si' : 'badge-no'}">
+                    ${p.disponibile ? '✅ Sì' : '❌ No'}
+                  </span>
+                </td>
+                <td style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="btn btn-sm" style="background:#333;color:#fff"
+                    onclick="toggleDisponibile('${p.id}', ${p.disponibile})">
+                    ${p.disponibile ? 'Disabilita' : 'Abilita'}
+                  </button>
+                  <button class="btn btn-sm btn-danger" onclick="eliminaPolitico('${p.id}', '${p.nome} ${p.cognome}')">
+                    Elimina
+                  </button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    } catch(e) {
+      el.innerHTML = `<div class="empty" style="color:#e57373">Errore: ${e.message}</div>`;
+    }
+  }
+
+  async function aggiungiPolitico() {
+    const msg = document.getElementById('msg-politico');
+    msg.className = 'msg';
+    const nome = document.getElementById('p-nome').value.trim();
+    const cognome = document.getElementById('p-cognome').value.trim();
+    const costo = parseInt(document.getElementById('p-costo').value) || 10;
+    if (!nome || !cognome) {
+      msg.textContent = 'Nome e cognome sono obbligatori.';
+      msg.className = 'msg err';
+      return;
+    }
+    try {
+      await db('politici', {
+        method: 'POST',
+        body: {
+          nome,
+          cognome,
+          partito: document.getElementById('p-partito').value.trim() || null,
+          ruolo_attuale: document.getElementById('p-ruolo').value.trim() || null,
+          costo_lire: costo,
+          disponibile: document.getElementById('p-disponibile').value === 'true',
+          immagine_url: document.getElementById('p-immagine').value.trim() || null,
+        }
+      });
+      msg.textContent = `✅ ${nome} ${cognome} aggiunto con successo.`;
+      msg.className = 'msg ok';
+      ['p-nome','p-cognome','p-partito','p-ruolo','p-immagine'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('p-costo').value = '10';
+      caricaPolitici();
+    } catch(e) {
+      msg.textContent = 'Errore: ' + e.message;
+      msg.className = 'msg err';
+    }
+  }
+
+  async function toggleDisponibile(id, attuale) {
+    try {
+      await db(`politici?id=eq.${id}`, {
+        method: 'PATCH',
+        body: { disponibile: !attuale, ultimo_aggiornamento: new Date().toISOString() }
+      });
+      caricaPolitici();
+    } catch(e) {
+      alert('Errore: ' + e.message);
+    }
+  }
+
+  async function eliminaPolitico(id, nome) {
+    if (!confirm(`Vuoi davvero eliminare ${nome}? L'operazione non è reversibile.`)) return;
+    try {
+      await db(`politici?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
+      caricaPolitici();
+    } catch(e) {
+      alert('Errore durante eliminazione: ' + e.message);
+    }
+  }
+
+  // =============================================
+  // ROSTER SETTIMANALE
+  // =============================================
+  let politiciGlobali = [];
+
+  async function caricaPoliticiPerRoster() {
+    try {
+      politiciGlobali = await db('politici?disponibile=eq.true&order=cognome.asc');
+      const container = document.getElementById('roster-politici-lista');
+      if (!politiciGlobali.length) {
+        container.innerHTML = '<p style="color:#888">Nessun politico disponibile. Aggiungili nella sezione Politici.</p>';
+        return;
+      }
+      container.innerHTML = `
+        <p style="color:#888;font-size:0.85rem;margin-bottom:10px">
+          Seleziona i politici da includere nel roster e imposta il costo in Lire per ognuno:
+        </p>
+        <table>
+          <thead>
+            <tr><th>✓</th><th>Politico</th><th>Partito</th><th>Lire</th></tr>
+          </thead>
+          <tbody>
+            ${politiciGlobali.map(p => `
+              <tr>
+                <td><input type="checkbox" id="rc-${p.id}" checked /></td>
+                <td>${p.nome} ${p.cognome}</td>
+                <td style="font-size:0.8rem;color:#aaa">${p.partito || '—'}</td>
+                <td><input type="number" id="rl-${p.id}" value="${p.costo_lire}" min="1" max="100"
+                  style="width:60px;padding:4px;background:#0f0f1a;border:1px solid #333;color:#fff;border-radius:4px" /></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    } catch(e) {
+      document.getElementById('roster-politici-lista').innerHTML =
+        `<p style="color:#e57373">Errore: ${e.message}</p>`;
+    }
+  }
+
+  async function pubblicaRoster() {
+    const msg = document.getElementById('msg-roster');
+    msg.className = 'msg';
+    const settimana = document.getElementById('r-settimana').value;
+    if (!settimana) {
+      msg.textContent = 'Seleziona la settimana.';
+      msg.className = 'msg err';
+      return;
+    }
+    const righe = politiciGlobali
+      .filter(p => document.getElementById('rc-' + p.id)?.checked)
+      .map(p => ({
+        settimana,
+        politico_id: p.id,
+        disponibile: true,
+        costo_lire: parseInt(document.getElementById('rl-' + p.id)?.value) || p.costo_lire
+      }));
+    if (!righe.length) {
+      msg.textContent = 'Seleziona almeno un politico.';
+      msg.className = 'msg err';
+      return;
+    }
+    try {
+      await db('roster_settimanale', {
+        method: 'POST',
+        body: righe,
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }
+      });
+      msg.textContent = `✅ Roster pubblicato per la settimana del ${settimana} con ${righe.length} politici.`;
+      msg.className = 'msg ok';
+      caricaRosterEsistenti();
+    } catch(e) {
+      msg.textContent = 'Errore: ' + e.message;
+      msg.className = 'msg err';
+    }
+  }
+
+  async function caricaRosterEsistenti() {
+    const el = document.getElementById('lista-roster');
+    try {
+      const dati = await db('roster_settimanale?order=settimana.desc&limit=50');
+      if (!dati.length) {
+        el.innerHTML = '<div class="empty">Nessun roster pubblicato ancora.</div>';
+        return;
+      }
+      // raggruppa per settimana
+      const per_settimana = {};
+      dati.forEach(r => {
+        if (!per_settimana[r.settimana]) per_settimana[r.settimana] = [];
+        per_settimana[r.settimana].push(r);
+      });
+      el.innerHTML = Object.entries(per_settimana).map(([sett, righe]) => `
+        <div style="margin-bottom:12px;padding:12px;background:#0f0f1a;border-radius:8px;border:1px solid #2a2a4a">
+          <strong style="color:#f5c518">Settimana del ${sett}</strong>
+          <span style="color:#888;font-size:0.85rem;margin-left:8px">${righe.length} politici</span>
+        </div>
+      `).join('');
+    } catch(e) {
+      el.innerHTML = `<div class="empty" style="color:#e57373">Errore: ${e.message}</div>`;
+    }
+  }
+
+  // =============================================
+  // EVENTI
+  // =============================================
+  async function caricaPoliticiPerEvento() {
+    try {
+      const dati = await db('politici?order=cognome.asc');
+      const sel = document.getElementById('e-politico');
+      sel.innerHTML = '<option value="">— seleziona politico —</option>' +
+        dati.map(p => `<option value="${p.id}">${p.cognome} ${p.nome} (${p.partito || '?'})</option>`).join('');
+    } catch(e) {}
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // precompila punti quando si cambia tipo evento
+    document.getElementById('e-tipo')?.addEventListener('change', function() {
+      const t = TIPI_EVENTO[this.value];
+      if (t) document.getElementById('e-punti').value = t.punti;
+    });
+  });
+
+  async function aggiungiEvento(approvaSubito) {
+    const msg = document.getElementById('msg-evento');
+    msg.className = 'msg';
+    const politico_id = document.getElementById('e-politico').value;
+    const tipo_evento = document.getElementById('e-tipo').value;
+    const punti = parseInt(document.getElementById('e-punti').value);
+    const settimana = document.getElementById('e-settimana').value;
+    const fonte_url = document.getElementById('e-fonte').value.trim();
+
+    if (!politico_id || !tipo_evento || isNaN(punti) || !settimana || !fonte_url) {
+      msg.textContent = 'Compila tutti i campi obbligatori (politico, tipo, punti, settimana, fonte).';
+      msg.className = 'msg err';
+      return;
+    }
+    try {
+      await db('eventi', {
+        method: 'POST',
+        body: {
+          politico_id,
+          tipo_evento,
+          punti,
+          settimana,
+          fonte_url,
+          approvato: approvaSubito,
+          approvato_at: approvaSubito ? new Date().toISOString() : null
+        }
+      });
+      msg.textContent = approvaSubito
+        ? '✅ Evento aggiunto e approvato.'
+        : '✅ Evento aggiunto. Trovi in attesa di approvazione qui sotto.';
+      msg.className = 'msg ok';
+      document.getElementById('e-politico').value = '';
+      document.getElementById('e-tipo').value = '';
+      document.getElementById('e-punti').value = '';
+      document.getElementById('e-fonte').value = '';
+      caricaEventiAttesa();
+      caricaEventiApprovati();
+    } catch(e) {
+      msg.textContent = 'Errore: ' + e.message;
+      msg.className = 'msg err';
+    }
+  }
+
+  async function caricaEventiAttesa() {
+    const el = document.getElementById('lista-eventi-attesa');
+    try {
+      const dati = await db('eventi?approvato=eq.false&order=created_at.desc');
+      if (!dati.length) {
+        el.innerHTML = '<div class="empty">Nessun evento in attesa.</div>';
+        return;
+      }
+      // carica nomi politici
+      const ids = [...new Set(dati.map(e => e.politico_id))];
+      const politici = await db(`politici?id=in.(${ids.join(',')})&select=id,nome,cognome`);
+      const mapP = Object.fromEntries(politici.map(p => [p.id, `${p.nome} ${p.cognome}`]));
+
+      el.innerHTML = `
+        <table>
+          <thead>
+            <tr><th>Politico</th><th>Evento</th><th>Punti</th><th>Settimana</th><th>Fonte</th><th>Azioni</th></tr>
+          </thead>
+          <tbody>
+            ${dati.map(e => `
+              <tr>
+                <td>${mapP[e.politico_id] || '?'}</td>
+                <td style="font-size:0.8rem">${TIPI_EVENTO[e.tipo_evento]?.label || e.tipo_evento}</td>
+                <td><span class="punti-badge">${e.punti > 0 ? '+' : ''}${e.punti}</span></td>
+                <td style="font-size:0.8rem;color:#aaa">${e.settimana}</td>
+                <td><a href="${e.fonte_url}" target="_blank" style="color:#f5c518;font-size:0.8rem">🔗 fonte</a></td>
+                <td style="display:flex;gap:6px">
+                  <button class="btn btn-sm btn-success" onclick="approvaEvento('${e.id}')">✅ Approva</button>
+                  <button class="btn btn-sm btn-danger" onclick="eliminaEvento('${e.id}')">❌ Elimina</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    } catch(e) {
+      el.innerHTML = `<div class="empty" style="color:#e57373">Errore: ${e.message}</div>`;
+    }
+  }
+
+  async function caricaEventiApprovati() {
+    const el = document.getElementById('lista-eventi-approvati');
+    try {
+      const dati = await db('eventi?approvato=eq.true&order=approvato_at.desc&limit=30');
+      if (!dati.length) {
+        el.innerHTML = '<div class="empty">Nessun evento approvato ancora.</div>';
+        return;
+      }
+      const ids = [...new Set(dati.map(e => e.politico_id))];
+      const politici = await db(`politici?id=in.(${ids.join(',')})&select=id,nome,cognome`);
+      const mapP = Object.fromEntries(politici.map(p => [p.id, `${p.nome} ${p.cognome}`]));
+
+      el.innerHTML = `
+        <table>
+          <thead>
+            <tr><th>Politico</th><th>Evento</th><th>Punti</th><th>Settimana</th><th>Fonte</th><th>Azioni</th></tr>
+          </thead>
+          <tbody>
+            ${dati.map(e => `
+              <tr>
+                <td>${mapP[e.politico_id] || '?'}</td>
+                <td style="font-size:0.8rem">${TIPI_EVENTO[e.tipo_evento]?.label || e.tipo_evento}</td>
+                <td><span class="punti-badge">${e.punti > 0 ? '+' : ''}${e.punti}</span></td>
+                <td style="font-size:0.8rem;color:#aaa">${e.settimana}</td>
+                <td><a href="${e.fonte_url}" target="_blank" style="color:#f5c518;font-size:0.8rem">🔗 fonte</a></td>
+                <td>
+                  <button class="btn btn-sm btn-danger" onclick="eliminaEvento('${e.id}')">Elimina</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    } catch(e) {
+      el.innerHTML = `<div class="empty" style="color:#e57373">Errore: ${e.message}</div>`;
+    }
+  }
+
+  async function approvaEvento(id) {
+    try {
+      await db(`eventi?id=eq.${id}`, {
+        method: 'PATCH',
+        body: { approvato: true, approvato_at: new Date().toISOString() }
+      });
+      caricaEventiAttesa();
+      caricaEventiApprovati();
+    } catch(e) {
+      alert('Errore: ' + e.message);
+    }
+  }
+
+  async function eliminaEvento(id) {
+    if (!confirm('Vuoi davvero eliminare questo evento?')) return;
+    try {
+      await db(`eventi?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
+      caricaEventiAttesa();
+      caricaEventiApprovati();
+    } catch(e) {
+      alert('Errore: ' + e.message);
+    }
+  }
+
+  // =============================================
+  // UTENTI
+  // =============================================
+  async function caricaUtenti() {
+    const el = document.getElementById('lista-utenti');
+    try {
+      const dati = await db('users?order=created_at.desc&select=id,nome,cognome,nickname,email,livello,onboarding_completato,created_at,paese');
+      if (!dati.length) {
+        el.innerHTML = '<div class="empty">Nessun utente ancora.</div>';
+        return;
+      }
+      el.innerHTML = `
+        <p style="color:#888;font-size:0.85rem;margin-bottom:12px">${dati.length} utenti iscritti</p>
+        <table>
+          <thead>
+            <tr><th>Nickname</th><th>Nome</th><th>Email</th><th>Paese</th><th>Livello</th><th>Onboarding</th><th>Iscritto</th></tr>
+          </thead>
+          <tbody>
+            ${dati.map(u => `
+              <tr>
+                <td><strong>@${u.nickname || '—'}</strong></td>
+                <td>${u.nome || ''} ${u.cognome || ''}</td>
+                <td style="font-size:0.8rem;color:#aaa">${u.email || '—'}</td>
+                <td>${u.paese || '—'}</td>
+                <td><span class="badge badge-si">${u.livello || 'membro'}</span></td>
+                <td>
+                  <span class="badge ${u.onboarding_completato ? 'badge-si' : 'badge-attesa'}">
+                    ${u.onboarding_completato ? '✅' : '⏳'}
+                  </span>
+                </td>
+                <td style="font-size:0.8rem;color:#aaa">
+                  ${new Date(u.created_at).toLocaleDateString('it-IT')}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    } catch(e) {
+      el.innerHTML = `<div class="empty" style="color:#e57373">Errore: ${e.message}</div>`;
+    }
+  }
+</script>
+</body>
+</html>
