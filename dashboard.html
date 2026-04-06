@@ -1746,10 +1746,10 @@
     html += `
       <div class="invito-form">
         <h3>➕ Genera link di invito</h3>
-        <p>Inserisci nome e email del tuo amico. Il sistema genera un link univoco che puoi mandargli su WhatsApp o via email.</p>
+        <p>Inserisci nome e email del tuo amico. Gli mandiamo un'email con il link — puoi anche mandarglielo su WhatsApp.</p>
         <input class="invito-input" id="invito-nome" type="text" placeholder="Nome dell'amico" autocomplete="off" />
         <input class="invito-input" id="invito-email" type="email" placeholder="Email dell'amico" autocomplete="off" />
-        <button class="btn-invita" id="btn-invita" onclick="mandaInvito()">Genera link →</button>
+        <button class="btn-invita" id="btn-invita" onclick="mandaInvito()">Invia invito →</button>
         <div id="msg-invito" style="margin-top:10px;font-size:0.82rem;display:none"></div>
         <div id="box-link-generato" style="display:none;margin-top:14px;background:var(--bg3);border:1px solid rgba(245,197,24,0.3);border-radius:var(--radius-sm);padding:14px">
           <div style="font-size:0.75rem;color:var(--text2);margin-bottom:8px">✅ Link generato per <strong id="nome-link-generato"></strong> — copialo e mandaglielo!</div>
@@ -1814,7 +1814,7 @@
     if (!email || !email.includes('@')) { mostraMsg(msg, 'Inserisci un\'email valida.', 'err'); return; }
 
     btn.disabled = true;
-    btn.textContent = 'Generazione...';
+    btn.textContent = 'Invio in corso...';
     msg.style.display = 'none';
     document.getElementById('box-link-generato').style.display = 'none';
 
@@ -1834,22 +1834,45 @@
         }
       });
 
+      // Chiama la Edge Function per mandare l'email
+      const nomeInvitante = utenteCorrente.nickname || utenteCorrente.nome || 'Un amico';
+      const edgeRes = await fetch(`${SUPABASE_URL}/functions/v1/invia-invito`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        },
+        body: JSON.stringify({
+          email: email,
+          token: token,
+          nome_invitato: nome,
+          nome_invitante: nomeInvitante
+        })
+      });
+
+      const edgeData = await edgeRes.json();
+
       // Costruisce il link corretto verso invito.html
-      const base = window.location.href.replace('dashboard.html', '');
-      const linkInvito = `${base}invito.html?token=${token}`;
+      const linkInvito = `https://fantagaffe.github.io/fantagaffe/invito.html?token=${token}`;
       _linkGeneratoCorrente = linkInvito;
 
-      // Mostra il box con il link da copiare
+      // Mostra il box con il link da copiare (sempre, anche se email ok)
       document.getElementById('nome-link-generato').textContent = nome;
       document.getElementById('testo-link-generato').textContent = linkInvito;
       document.getElementById('box-link-generato').style.display = 'block';
+
+      if (edgeData.ok) {
+        mostraMsg(msg, `✅ Email inviata a ${nome}! Puoi anche mandargli il link qui sotto su WhatsApp.`, 'ok');
+      } else {
+        mostraMsg(msg, `⚠️ Email non inviata (${edgeData.error || 'errore'}). Usa il link qui sotto per mandarlo su WhatsApp.`, 'err');
+      }
 
       // Svuota i campi del form
       document.getElementById('invito-nome').value = '';
       document.getElementById('invito-email').value = '';
 
       btn.disabled = false;
-      btn.textContent = 'Genera link →';
+      btn.textContent = 'Invia invito →';
 
       // Ricarica la lista inviti in fondo
       setTimeout(() => caricaInviti(), 1000);
@@ -1857,7 +1880,7 @@
     } catch(e) {
       mostraMsg(msg, 'Errore: ' + e.message, 'err');
       btn.disabled = false;
-      btn.textContent = 'Genera link →';
+      btn.textContent = 'Invia invito →';
     }
   }
 
