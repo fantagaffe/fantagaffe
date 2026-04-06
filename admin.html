@@ -542,8 +542,21 @@
 
   async function caricaRosterPerModifica(settimana) {
     document.getElementById('r-settimana').value = settimana;
-    await caricaPoliticiPerRoster();
     try {
+      politiciGlobali = await db('politici?disponibile=eq.true&order=cognome.asc');
+      const container = document.getElementById('roster-politici-lista');
+      if (!politiciGlobali.length) { container.innerHTML = '<p style="color:#888">Nessun politico disponibile.</p>'; return; }
+      container.innerHTML = `
+        <p style="color:#888;font-size:0.85rem;margin-bottom:10px">Seleziona i politici e imposta il costo in Lire:</p>
+        <table><thead><tr><th>&#10003;</th><th>Politico</th><th>Partito</th><th>Lire</th></tr></thead><tbody>
+        ${politiciGlobali.map(p => `<tr>
+          <td><input type="checkbox" id="rc-${p.id}" /></td>
+          <td>${p.nome} ${p.cognome}</td>
+          <td style="font-size:0.8rem;color:#aaa">${p.partito || '&#8212;'}</td>
+          <td><input type="number" id="rl-${p.id}" value="${p.costo_lire}" min="1" max="100"
+            style="width:60px;padding:4px;background:#0f0f1a;border:1px solid #333;color:#fff;border-radius:4px" /></td>
+        </tr>`).join('')}
+        </tbody></table>`;
       const esistenti = await db(`roster_settimanale?settimana=eq.${settimana}`);
       const mapCosto = Object.fromEntries(esistenti.map(r => [r.politico_id, r.costo_lire]));
       const idEsistenti = new Set(esistenti.map(r => r.politico_id));
@@ -554,7 +567,7 @@
         if (inp && mapCosto[p.id]) inp.value = mapCosto[p.id];
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch(e) { alert('Errore: ' + e.message); }
+    } catch(e) { alert('Errore nel caricare il roster: ' + e.message); }
   }
 
   // EVENTI
