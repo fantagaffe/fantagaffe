@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>FantaGaffe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --verde: #009246;
+      --rosso: #ce2b37;
+      --bianco: #f5f5f0;
+      --oro: #f5c518;
+      --bg: #0a0a0f;
+      --bg2: #13131f;
+      --bg3: #1c1c2e;
+      --bg4: #252538;
+      --border: rgba(255,255,255,0.08);
+      --text: #e8e8f0;
+      --text2: #8888aa;
+      --text3: #555570;
+      --verde-dim: rgba(0,146,70,0.15);
+      --rosso-dim: rgba(206,43,55,0.15);
+      --oro-dim: rgba(245,197,24,0.12);
+      --nav-h: 68px;
+      --header-h: 60px;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* NOISE TEXTURE OVERLAY */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* HEADER */
+    .header {
+      position: fixed;
+      top: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      height: var(--header-h);
+      background: rgba(10,10,15,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 100;
+    }
+
+    .header-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--verde) 0%, var(--bianco) 50%, var(--rosso) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar-sm {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--verde), var(--rosso));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #fff;
+      border: 2px solid var(--border);
+    }
+
+    .settimana-badge {
+      font-size: 0.7rem;
+      color: var(--text2);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* MAIN CONTENT */
+    .main {
+      padding-top: calc(var(--header-h) + 16px);
+      padding-bottom: calc(var(--nav-h) + 24px);
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* VIEWS */
+    .view { display: none; padding: 0 16px; animation: fadeIn 0.2s ease; }
+    .view.attiva { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* SEZIONE TITOLO */
+    .sezione-titolo {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 16px;
+      padding-top: 4px;
+    }
+
+    /* CARD BASE */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .card-glass {
+      background: rgba(28,28,46,0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    /* CTA SCEGLI SQUADRA */
+    .cta-squadra {
+      background: linear-gradient(135deg, rgba(0,146,70,0.2), rgba(206,43,55,0.2));
+      border: 1px solid rgba(245,197,24,0.3);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .cta-squadra .emoji { font-size: 2.5rem; margin-bottom: 12px; }
+    .cta-squadra h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 1px; color: var(--oro); margin-bottom: 6px; }
+    .cta-squadra p { font-size: 0.85rem; color: var(--text2); margin-bottom: 16px; line-height: 1.5; }
+    .btn-cta {
+      display: inline-block;
+      padding: 14px 28px;
+      background: var(--oro);
+      color: #000;
+      border: none;
+      border-radius: 50px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+      text-decoration: none;
+    }
+    .btn-cta:active { transform: scale(0.97); opacity: 0.9; }
+
+    /* COUNTDOWN */
+    .countdown-bar {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .countdown-label { font-size: 0.8rem; color: var(--text2); }
+    .countdown-time { font-family: 'DM Mono', monospace; font-size: 0.9rem; color: var(--oro); }
+
+    /* ── CLASSIFICA ── */
+    .classifica-hero {
+      background: linear-gradient(135deg, var(--bg2), var(--bg3));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .classifica-hero .pos-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 4rem;
+      line-height: 1;
+      color: var(--oro);
+    }
+    .classifica-hero .pos-label { font-size: 0.8rem; color: var(--text2); margin-bottom: 8px; }
+    .classifica-hero .pts-big {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.4rem;
+      color: var(--verde);
+      font-weight: 500;
+    }
+    .motivazionale {
+      background: var(--oro-dim);
+      border: 1px solid rgba(245,197,24,0.2);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 0.82rem;
+      color: var(--text);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .motivazionale strong { color: var(--oro); }
+
+    .rank-list { margin-bottom: 12px; }
+    .rank-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+      border-radius: 0;
+      gap: 12px;
+    }
+    .rank-row:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+    .rank-row:last-child { border-bottom: none; border-radius: 0 0 var(--radius) var(--radius); }
+    .rank-row.tu {
+      background: rgba(0,146,70,0.12);
+      border-left: 3px solid var(--verde);
+    }
+    .rank-row.top1 { background: rgba(245,197,24,0.08); }
+    .rank-row.top2 { background: rgba(192,192,192,0.06); }
+    .rank-row.top3 { background: rgba(205,127,50,0.06); }
+
+    .rank-pos {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text3);
+      width: 24px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .rank-pos.oro { color: var(--oro); }
+    .rank-pos.argento { color: #c0c0c0; }
+    .rank-pos.bronzo { color: #cd7f32; }
+
+    .rank-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .rank-info { flex: 1; min-width: 0; }
+    .rank-nick {
+      font-size: 0.88rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rank-nick.tu-label::after {
+      content: ' tu';
+      font-size: 0.7rem;
+      color: var(--verde);
+      font-weight: 400;
+      font-family: 'DM Mono', monospace;
+    }
+    .rank-badge-liv {
+      font-size: 0.65rem;
+      color: var(--text3);
+      font-family: 'DM Mono', monospace;
+    }
+    .rank-pts {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text2);
+      flex-shrink: 0;
+    }
+    .rank-pts.high { color: var(--verde); }
+
+    .separatore-classifica {
+      text-align: center;
+      padding: 8px 0;
+      color: var(--text3);
+      font-size: 0.8rem;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── SQUADRA ── */
+    .politico-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.2s;
+    }
+    .politico-card.capitano {
+      border-color: rgba(245,197,24,0.4);
+      background: linear-gradient(135deg, var(--bg2), rgba(245,197,24,0.05));
+    }
+    .politico-card.positivo { border-left: 3px solid var(--verde); }
+    .politico-card.negativo { border-left: 3px solid var(--rosso); }
+    .politico-card.zero { border-left: 3px solid var(--text3); }
+
+    .pol-iniziali {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 500;
+      flex-shrink: 0;
+      background: var(--bg4);
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+    .pol-iniziali.cap { background: var(--oro-dim); color: var(--oro); border-color: rgba(245,197,24,0.3); }
+
+    .pol-info { flex: 1; min-width: 0; }
+    .pol-nome {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pol-sub {
+      font-size: 0.75rem;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    .cap-badge {
+      display: inline-block;
+      background: var(--oro-dim);
+      color: var(--oro);
+      border: 1px solid rgba(245,197,24,0.3);
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      font-family: 'DM Mono', monospace;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .pol-pts {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .pol-pts.pos { color: var(--verde); }
+    .pol-pts.neg { color: var(--rosso); }
+    .pol-pts.zero { color: var(--text3); }
+
+    .nota-scatola-nera {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 0.78rem;
+      color: var(--text3);
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    .totale-bar {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .totale-label { font-size: 0.8rem; color: var(--text2); }
+    .totale-pts { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--verde); font-weight: 500; }
+
+    /* ── EVENTI ── */
+    .evento-row {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .evento-row:last-child { border-bottom: none; }
+
+    .evento-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .evento-titolo {
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.3;
+      flex: 1;
+    }
+    .evento-pts {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .evento-pts.pos { color: var(--verde); }
+    .evento-pts.neg { color: var(--rosso); }
+
+    .evento-meta {
+      font-size: 0.75rem;
+      color: var(--text3);
+      margin-bottom: 6px;
+    }
+
+    .evento-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      font-family: 'DM Mono', monospace;
+    }
+    .tag-tua { background: rgba(0,146,70,0.15); color: #4dbb84; border: 1px solid rgba(0,146,70,0.3); }
+    .tag-tua-penalita { background: var(--rosso-dim); color: #e87070; border: 1px solid rgba(206,43,55,0.3); }
+    .tag-tua-cap { background: var(--oro-dim); color: var(--oro); border: 1px solid rgba(245,197,24,0.3); }
+    .tag-non-tua { color: var(--text3); font-size: 0.7rem; }
+
+    .nota-eventi {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 0.78rem;
+      color: var(--text2);
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    /* ── BRIGATE ── */
+    .brigata-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      gap: 14px;
+      cursor: default;
+    }
+    .brigata-row:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+    .brigata-row:last-child { border-bottom: none; border-radius: 0 0 var(--radius) var(--radius); }
+    .brigata-row.la-tua {
+      background: rgba(0,100,200,0.12);
+      border-left: 3px solid #4a90d9;
+    }
+
+    .brig-pos {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text3);
+      width: 20px;
+      flex-shrink: 0;
+      text-align: center;
+    }
+    .brig-info { flex: 1; min-width: 0; }
+    .brig-nome {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .brig-sub { font-size: 0.75rem; color: var(--text2); margin-top: 2px; }
+    .brig-right { text-align: right; flex-shrink: 0; }
+    .brig-pts {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--verde);
+    }
+    .brig-pts.la-tua-c { color: #4a90d9; }
+    .brig-tag {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      font-family: 'DM Mono', monospace;
+    }
+    .brig-tag.privati { background: var(--bg4); color: var(--text3); }
+    .brig-tag.tua-t { background: rgba(74,144,217,0.2); color: #4a90d9; }
+
+    .nota-brigate {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 0.78rem;
+      color: var(--text2);
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    /* DETTAGLIO BRIGATA */
+    .dettaglio-brigata {
+      margin-top: 16px;
+    }
+    .dettaglio-titolo {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #4a90d9;
+      margin-bottom: 12px;
+    }
+    .membro-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+    .membro-row:last-child { border-bottom: none; }
+    .membro-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      flex-shrink: 0;
+      background: var(--bg4);
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+    .membro-nome { flex: 1; font-size: 0.88rem; font-weight: 500; }
+    .membro-pts {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text2);
+    }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      height: var(--nav-h);
+      background: rgba(10,10,15,0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: stretch;
+      z-index: 100;
+    }
+
+    .nav-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      border: none;
+      background: transparent;
+      color: var(--text3);
+    }
+    .nav-tab.attiva { color: var(--bianco); }
+    .nav-tab.attiva .nav-icon { color: var(--oro); }
+
+    .nav-icon { font-size: 1.3rem; line-height: 1; }
+    .nav-label {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── MERCATO ── */
+    #view-mercato {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 200;
+      overflow-y: auto;
+      display: none;
+      padding-bottom: 100px;
+    }
+    #view-mercato.aperto { display: block; }
+
+    .mercato-header {
+      position: sticky;
+      top: 0;
+      background: rgba(10,10,15,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 16px 12px;
+      z-index: 10;
+    }
+    .mercato-header h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 1px;
+      color: var(--oro);
+      margin-bottom: 4px;
+    }
+
+    .budget-bar {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .budget-label { font-size: 0.78rem; color: var(--text2); }
+    .budget-val { font-family: 'DM Mono', monospace; font-size: 1rem; color: var(--oro); font-weight: 500; }
+    .budget-slot { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--text2); }
+
+    .mercato-lista { padding: 12px 16px; }
+
+    .pol-mercato {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      gap: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .pol-mercato.selezionato {
+      border-color: var(--verde);
+      background: rgba(0,146,70,0.08);
+    }
+    .pol-mercato.capitano-sel {
+      border-color: var(--oro);
+      background: var(--oro-dim);
+    }
+    .pol-mercato.esaurito {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .pol-m-check {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--text3);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      transition: all 0.15s;
+    }
+    .pol-mercato.selezionato .pol-m-check,
+    .pol-mercato.capitano-sel .pol-m-check {
+      background: var(--verde);
+      border-color: var(--verde);
+      color: #fff;
+    }
+    .pol-mercato.capitano-sel .pol-m-check {
+      background: var(--oro);
+      border-color: var(--oro);
+      color: #000;
+    }
+
+    .pol-m-info { flex: 1; min-width: 0; }
+    .pol-m-nome { font-size: 0.88rem; font-weight: 600; }
+    .pol-m-sub { font-size: 0.72rem; color: var(--text2); margin-top: 2px; }
+
+    .pol-m-costo {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--text2);
+      flex-shrink: 0;
+    }
+    .pol-mercato.selezionato .pol-m-costo { color: var(--verde); }
+
+    .mercato-footer {
+      position: fixed;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      background: rgba(10,10,15,0.97);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    .mercato-scelti {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .chip-pol {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      font-family: 'DM Mono', monospace;
+      color: var(--text2);
+    }
+    .chip-pol.cap { background: var(--oro-dim); border-color: rgba(245,197,24,0.4); color: var(--oro); }
+    .chip-pol .remove { cursor: pointer; color: var(--text3); margin-left: 2px; }
+
+    .mercato-istruzioni {
+      font-size: 0.75rem;
+      color: var(--text3);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .btn-conferma {
+      width: 100%;
+      padding: 14px;
+      background: var(--verde);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-conferma:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-conferma:not(:disabled):active { opacity: 0.85; }
+
+    .btn-annulla-mercato {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      color: var(--text2);
+      cursor: pointer;
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text3);
+    }
+    .empty-state .emoji { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.85rem; line-height: 1.5; }
+
+    /* LOADING */
+    .loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text3);
+      font-size: 0.85rem;
+    }
+    .spin {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--oro);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-bottom: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* BADGE LIVELLO */
+    .badge-liv {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+    }
+    .badge-membro { background: rgba(136,136,170,0.15); color: var(--text2); }
+    .badge-capitano { background: rgba(0,146,70,0.2); color: #4dbb84; }
+    .badge-ammiraglio { background: var(--oro-dim); color: var(--oro); }
+
+    /* INFO BRIGATA TOP */
+    .brigata-info-top {
+      background: linear-gradient(135deg, rgba(74,144,217,0.1), rgba(0,146,70,0.05));
+      border: 1px solid rgba(74,144,217,0.2);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brigata-icon {
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+    .brigata-info-testo h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 1px;
+      color: #4a90d9;
+      margin-bottom: 2px;
+    }
+    .brigata-info-testo p { font-size: 0.78rem; color: var(--text2); }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 10px 20px;
+      font-size: 0.82rem;
+      color: var(--text);
+      z-index: 999;
+      opacity: 0;
+      transition: all 0.25s;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .toast.visibile {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast.ok { border-color: rgba(0,146,70,0.4); color: #4dbb84; }
+    .toast.err { border-color: rgba(206,43,55,0.4); color: #e87070; }
+  </style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">FantaGaffe</div>
+  <div class="header-right">
+    <div class="settimana-badge" id="badge-settimana">Sett. —</div>
+    <div class="avatar-sm" id="avatar-header">?</div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- VIEW: CLASSIFICA -->
+  <div class="view attiva" id="view-classifica">
+    <div class="loading" id="loading-classifica">
+      <div class="spin"></div><br>Caricamento classifica...
+    </div>
+    <div id="contenuto-classifica" style="display:none"></div>
+  </div>
+
+  <!-- VIEW: SQUADRA -->
+  <div class="view" id="view-squadra">
+    <div class="loading" id="loading-squadra">
+      <div class="spin"></div><br>Caricamento squadra...
+    </div>
+    <div id="contenuto-squadra" style="display:none"></div>
+  </div>
+
+  <!-- VIEW: EVENTI -->
+  <div class="view" id="view-eventi">
+    <div class="loading" id="loading-eventi">
+      <div class="spin"></div><br>Caricamento eventi...
+    </div>
+    <div id="contenuto-eventi" style="display:none"></div>
+  </div>
+
+  <!-- VIEW: BRIGATE -->
+  <div class="view" id="view-brigate">
+    <div class="loading" id="loading-brigate">
+      <div class="spin"></div><br>Caricamento brigate...
+    </div>
+    <div id="contenuto-brigate" style="display:none"></div>
+  </div>
+
+</main>
+
+<!-- MERCATO (overlay) -->
+<div id="view-mercato">
+  <div class="mercato-header">
+    <button class="btn-annulla-mercato" onclick="chiudiMercato()">✕ Annulla</button>
+    <h2>🏛️ Mercato Settimanale</h2>
+    <div style="font-size:0.78rem;color:var(--text2);margin-bottom:4px">Scegli 8 politici — budget 100 Lire</div>
+    <div class="budget-bar">
+      <div>
+        <div class="budget-label">Budget rimasto</div>
+      </div>
+      <div style="text-align:right">
+        <div class="budget-val"><span id="budget-rimasto">100</span> Lire</div>
+        <div class="budget-slot"><span id="slot-rimasti">8</span> slot liberi</div>
+      </div>
+    </div>
+  </div>
+  <div class="mercato-lista" id="mercato-lista">
+    <div class="loading"><div class="spin"></div><br>Caricamento roster...</div>
+  </div>
+  <div class="mercato-footer">
+    <div class="mercato-istruzioni" id="mercato-istruzioni">
+      Tocca un politico per aggiungerlo. Poi toccalo di nuovo per nominarlo <strong style="color:var(--oro)">Capitano ×2</strong>. Toccalo una terza volta per rimuoverlo.
+    </div>
+    <div class="mercato-scelti" id="mercato-scelti"></div>
+    <button class="btn-conferma" id="btn-conferma-squadra" disabled onclick="confermaSquadra()">
+      Conferma squadra
+    </button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-tab attiva" onclick="mostraView('classifica', this)">
+    <span class="nav-icon">🏆</span>
+    <span class="nav-label">Classifica</span>
+  </button>
+  <button class="nav-tab" onclick="mostraView('squadra', this)">
+    <span class="nav-icon">🎯</span>
+    <span class="nav-label">Squadra</span>
+  </button>
+  <button class="nav-tab" onclick="mostraView('eventi', this)">
+    <span class="nav-icon">⚡</span>
+    <span class="nav-label">Eventi</span>
+  </button>
+  <button class="nav-tab" onclick="mostraView('brigate', this)">
+    <span class="nav-icon">⚓</span>
+    <span class="nav-label">Brigate</span>
+  </button>
+</nav>
+
+<script>
+  // ─────────────────────────────────────────────
+  // CONFIG
+  // ─────────────────────────────────────────────
+  const SUPABASE_URL = 'https://shkrdjqqeradgsucrfib.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa3JkanFxZXJhZGdzdWNyZmliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNDE2NTAsImV4cCI6MjA5MDkxNzY1MH0.wxfwYednaNxhdpDLKZWuvrTLIt8clVHvmnhgTj8cqtA';
+
+  // ─────────────────────────────────────────────
+  // STATO
+  // ─────────────────────────────────────────────
+  let utenteCorrente = null;
+  let settimanaCorrente = lunediDiQuestaSettimana();
+  let squadraCorrente = null; // squadra salvata questa settimana
+  let mercatoScelti = []; // [{id, nome, cognome, costo, capitano: bool}]
+  let rosterDisponibile = [];
+
+  function lunediDiQuestaSettimana() {
+    const oggi = new Date();
+    const giorno = oggi.getDay(); // 0=dom, 1=lun...
+    const diff = giorno === 0 ? -6 : 1 - giorno;
+    const lun = new Date(oggi);
+    lun.setDate(oggi.getDate() + diff);
+    return lun.toISOString().split('T')[0];
+  }
+
+  function inizialesDa(nome, cognome) {
+    return ((nome||'').charAt(0) + (cognome||'').charAt(0)).toUpperCase();
+  }
+
+  function coloreAvatar(str) {
+    const colori = [
+      ['rgba(0,146,70,0.3)','#4dbb84'],
+      ['rgba(206,43,55,0.3)','#e87070'],
+      ['rgba(245,197,24,0.2)','#f5c518'],
+      ['rgba(74,144,217,0.3)','#4a90d9'],
+      ['rgba(155,89,182,0.3)','#bb88dd'],
+      ['rgba(230,126,34,0.3)','#e8963a'],
+    ];
+    let h = 0;
+    for (let c of (str||'')) h = (h * 31 + c.charCodeAt(0)) % colori.length;
+    return colori[Math.abs(h) % colori.length];
+  }
+
+  // ─────────────────────────────────────────────
+  // API
+  // ─────────────────────────────────────────────
+  async function db(path, opts = {}) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': opts.prefer || 'return=representation',
+        ...opts.headers
+      },
+      method: opts.method || 'GET',
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || res.statusText);
+    }
+    const t = await res.text();
+    return t ? JSON.parse(t) : [];
+  }
+
+  async function dbAuth(path, opts = {}) {
+    const session = await getSession();
+    if (!session) throw new Error('Non autenticato');
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+        'Prefer': opts.prefer || 'return=representation',
+        ...opts.headers
+      },
+      method: opts.method || 'GET',
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || res.statusText);
+    }
+    const t = await res.text();
+    return t ? JSON.parse(t) : [];
+  }
+
+  async function getSession() {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: localStorage.getItem('sb_refresh') })
+      });
+      const data = await res.json();
+      if (data.access_token) {
+        localStorage.setItem('sb_refresh', data.refresh_token);
+        return data;
+      }
+    } catch(e) {}
+    return null;
+  }
+
+  // ─────────────────────────────────────────────
+  // INIT
+  // ─────────────────────────────────────────────
+  async function init() {
+    // Aggiorna badge settimana
+    const d = new Date(settimanaCorrente + 'T00:00:00');
+    document.getElementById('badge-settimana').textContent =
+      'Sett. ' + d.toLocaleDateString('it-IT', { day:'2-digit', month:'2-digit' });
+
+    // Carica utente
+    try {
+      const session = await getSession();
+      if (!session) {
+        // Non loggato → redirect al login
+        window.location.href = 'login.html';
+        return;
+      }
+      const utenti = await dbAuth(`users?id=eq.${session.user.id}&limit=1`);
+      if (utenti.length) {
+        utenteCorrente = utenti[0];
+        const iniz = inizialesDa(utenteCorrente.nome, utenteCorrente.cognome);
+        document.getElementById('avatar-header').textContent = iniz;
+      }
+    } catch(e) {
+      // Se non c'è sessione, mostra comunque la dashboard con dati demo
+      console.log('Sessione non trovata, modalità demo');
+    }
+
+    // Carica squadra attuale
+    await caricaSquadraCorrente();
+
+    // Carica prima view
+    caricaClassifica();
+  }
+
+  async function caricaSquadraCorrente() {
+    if (!utenteCorrente) return;
+    try {
+      const sq = await dbAuth(`squadre?user_id=eq.${utenteCorrente.id}&settimana=eq.${settimanaCorrente}&limit=1`);
+      squadraCorrente = sq.length ? sq[0] : null;
+    } catch(e) { squadraCorrente = null; }
+  }
+
+  // ─────────────────────────────────────────────
+  // NAVIGAZIONE
+  // ─────────────────────────────────────────────
+  function mostraView(nome, btn) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('attiva'));
+    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('attiva'));
+    document.getElementById('view-' + nome).classList.add('attiva');
+    btn.classList.add('attiva');
+    if (nome === 'classifica') caricaClassifica();
+    if (nome === 'squadra') caricaSquadra();
+    if (nome === 'eventi') caricaEventi();
+    if (nome === 'brigate') caricaBrigate();
+  }
+
+  // ─────────────────────────────────────────────
+  // TOAST
+  // ─────────────────────────────────────────────
+  function toast(msg, tipo = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast visibile ' + tipo;
+    setTimeout(() => el.className = 'toast', 2800);
+  }
+
+  // ─────────────────────────────────────────────
+  // CLASSIFICA
+  // ─────────────────────────────────────────────
+  async function caricaClassifica() {
+    const loading = document.getElementById('loading-classifica');
+    const contenuto = document.getElementById('contenuto-classifica');
+    loading.style.display = 'block';
+    contenuto.style.display = 'none';
+
+    try {
+      // Prendi top 10 + utente corrente
+      const top10 = await db(`users?order=stagione_corrente_punti.desc&limit=10&select=id,nickname,nome,cognome,livello,stagione_corrente_punti`);
+
+      let html = '';
+
+      // Se l'utente non ha squadra questa settimana → CTA
+      if (utenteCorrente && !squadraCorrente) {
+        html += `
+          <div class="cta-squadra">
+            <div class="emoji">🏛️</div>
+            <h2>Scegli la tua squadra!</h2>
+            <p>Il turno è aperto. Scegli 8 politici con 100 Lire e nomina il tuo Capitano.</p>
+            <button class="btn-cta" onclick="apriMercato()">Vai al mercato →</button>
+          </div>`;
+      }
+
+      // Countdown al lunedì successivo
+      const prossLun = new Date(settimanaCorrente + 'T00:00:00');
+      prossLun.setDate(prossLun.getDate() + 7);
+      const msRimasti = prossLun - new Date();
+      const gg = Math.floor(msRimasti / 86400000);
+      const hh = Math.floor((msRimasti % 86400000) / 3600000);
+      html += `
+        <div class="countdown-bar">
+          <span class="countdown-label">Turno si chiude tra</span>
+          <span class="countdown-time">${gg}g ${hh}h</span>
+        </div>`;
+
+      // Hero posizione utente
+      if (utenteCorrente && squadraCorrente) {
+        const posizione = top10.findIndex(u => u.id === utenteCorrente.id) + 1;
+        const sopra = top10[posizione - 2];
+        const diffPts = sopra ? (sopra.stagione_corrente_punti || 0) - (utenteCorrente.stagione_corrente_punti || 0) : 0;
+        html += `
+          <div class="classifica-hero">
+            <div class="pos-label">La tua posizione</div>
+            <div class="pos-num">${posizione || '—'}</div>
+            <div class="pts-big">${utenteCorrente.stagione_corrente_punti || 0} pts</div>
+          </div>`;
+        if (sopra && diffPts > 0) {
+          html += `<div class="motivazionale">
+            <strong>@${sopra.nickname}</strong> ti supera di soli <strong>${diffPts} punti</strong>.
+            Una gaffe dei tuoi politici questa settimana e lo scavalchi. 💪
+          </div>`;
+        }
+      }
+
+      // Top 10
+      html += `<p class="sezione-titolo">Top 10 classifica</p>`;
+      html += `<div class="card" style="padding:0;overflow:hidden"><div class="rank-list">`;
+
+      const posEmoji = ['🥇','🥈','🥉'];
+      const posClass = ['top1','top2','top3'];
+
+      top10.forEach((u, i) => {
+        const eTu = utenteCorrente && u.id === utenteCorrente.id;
+        const iniz = inizialesDa(u.nome, u.cognome);
+        const [bg, fg] = coloreAvatar(u.nickname || u.nome);
+        const livClasse = { membro: 'badge-membro', capitano: 'badge-capitano', ammiraglio: 'badge-ammiraglio' }[u.livello] || 'badge-membro';
+        html += `
+          <div class="rank-row ${eTu ? 'tu' : (posClass[i] || '')}">
+            <div class="rank-pos ${i === 0 ? 'oro' : i === 1 ? 'argento' : i === 2 ? 'bronzo' : ''}">
+              ${i < 3 ? posEmoji[i] : (i + 1)}
+            </div>
+            <div class="rank-avatar" style="background:${bg};color:${fg}">${iniz}</div>
+            <div class="rank-info">
+              <div class="rank-nick ${eTu ? 'tu-label' : ''}">@${u.nickname || u.nome}</div>
+              <span class="badge-liv ${livClasse}">${u.livello || 'membro'}</span>
+            </div>
+            <div class="rank-pts ${(u.stagione_corrente_punti || 0) > 0 ? 'high' : ''}">${u.stagione_corrente_punti || 0}</div>
+          </div>`;
+      });
+
+      if (!top10.length) {
+        html += `<div class="empty-state"><div class="emoji">🏛️</div><p>Nessun giocatore ancora.<br>Sii il primo a scegliere la squadra!</p></div>`;
+      }
+
+      html += `</div></div>`;
+      contenuto.innerHTML = html;
+      loading.style.display = 'none';
+      contenuto.style.display = 'block';
+
+    } catch(e) {
+      loading.innerHTML = `<p style="color:var(--rosso)">Errore: ${e.message}</p>`;
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // SQUADRA
+  // ─────────────────────────────────────────────
+  async function caricaSquadra() {
+    const loading = document.getElementById('loading-squadra');
+    const contenuto = document.getElementById('contenuto-squadra');
+    loading.style.display = 'block';
+    contenuto.style.display = 'none';
+
+    try {
+      if (!utenteCorrente) {
+        loading.innerHTML = `<div class="empty-state"><div class="emoji">🔐</div><p>Accedi per vedere la tua squadra.</p></div>`;
+        return;
+      }
+
+      if (!squadraCorrente || !squadraCorrente.politici?.length) {
+        loading.style.display = 'none';
+        contenuto.style.display = 'block';
+        contenuto.innerHTML = `
+          <p class="sezione-titolo">I tuoi 8 politici questa settimana</p>
+          <div class="cta-squadra">
+            <div class="emoji">🎯</div>
+            <h2>Nessuna squadra ancora!</h2>
+            <p>Scegli i tuoi 8 politici dal roster di questa settimana. Hai 100 Lire da spendere.</p>
+            <button class="btn-cta" onclick="apriMercato()">Scegli la squadra →</button>
+          </div>`;
+        return;
+      }
+
+      // Carica dettagli politici della squadra
+      const ids = squadraCorrente.politici.join(',');
+      const politici = await db(`politici?id=in.(${ids})&select=id,nome,cognome,partito,ruolo_attuale,costo_lire`);
+      const mapPol = Object.fromEntries(politici.map(p => [p.id, p]));
+
+      // Carica eventi approvati questa settimana per questi politici
+      const eventi = await db(`eventi?approvato=eq.true&settimana=eq.${settimanaCorrente}&politico_id=in.(${ids})`);
+      const puntiByCap = {};
+      eventi.forEach(e => {
+        if (!puntiByCap[e.politico_id]) puntiByCap[e.politico_id] = 0;
+        puntiByCap[e.politico_id] += e.punti;
+      });
+
+      let totale = 0;
+      let html = `<p class="sezione-titolo">I tuoi 8 politici questa settimana</p>`;
+
+      // Totale punti
+      squadraCorrente.politici.forEach(pid => {
+        const punti = puntiByCap[pid] || 0;
+        const isCapPol = pid === squadraCorrente.capitano_politico_id;
+        totale += isCapPol ? punti * 2 : punti;
+      });
+
+      html += `<div class="totale-bar">
+        <span class="totale-label">Punti totali questa settimana</span>
+        <span class="totale-pts">${totale} pts</span>
+      </div>`;
+
+      // Lista politici
+      squadraCorrente.politici.forEach(pid => {
+        const p = mapPol[pid];
+        if (!p) return;
+        const isCapPol = pid === squadraCorrente.capitano_politico_id;
+        const puntiBase = puntiByCap[pid] || 0;
+        const puntiFinali = isCapPol ? puntiBase * 2 : puntiBase;
+        const iniz = inizialesDa(p.nome, p.cognome);
+        const cls = puntiFinali > 0 ? 'positivo' : puntiFinali < 0 ? 'negativo' : 'zero';
+        const ptsCls = puntiFinali > 0 ? 'pos' : puntiFinali < 0 ? 'neg' : 'zero';
+        const ptsStr = puntiFinali === 0 ? '0 pts' : (puntiFinali > 0 ? '+' : '') + puntiFinali + ' pts';
+        html += `
+          <div class="politico-card ${cls} ${isCapPol ? 'capitano' : ''}">
+            <div class="pol-iniziali ${isCapPol ? 'cap' : ''}">${iniz}</div>
+            <div class="pol-info">
+              <div class="pol-nome">
+                ${p.cognome} ${p.nome.charAt(0)}.
+                ${isCapPol ? '<span class="cap-badge">CAPITANO ×2</span>' : ''}
+              </div>
+              <div class="pol-sub">${p.ruolo_attuale || p.partito || '—'} · ${p.costo_lire} Lire</div>
+            </div>
+            <div class="pol-pts ${ptsCls}">${ptsStr}</div>
+          </div>`;
+      });
+
+      html += `<div class="nota-scatola-nera">
+        Non vedi i politici degli altri giocatori. La loro strategia è una scatola nera — così come la tua per loro.
+      </div>`;
+
+      contenuto.innerHTML = html;
+      loading.style.display = 'none';
+      contenuto.style.display = 'block';
+
+    } catch(e) {
+      loading.innerHTML = `<p style="color:var(--rosso)">Errore: ${e.message}</p>`;
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // EVENTI
+  // ─────────────────────────────────────────────
+  async function caricaEventi() {
+    const loading = document.getElementById('loading-eventi');
+    const contenuto = document.getElementById('contenuto-eventi');
+    loading.style.display = 'block';
+    contenuto.style.display = 'none';
+
+    try {
+      const eventi = await db(`eventi?approvato=eq.true&settimana=eq.${settimanaCorrente}&order=created_at.desc`);
+
+      if (!eventi.length) {
+        loading.style.display = 'none';
+        contenuto.style.display = 'block';
+        contenuto.innerHTML = `
+          <p class="sezione-titolo">Tutti gli eventi verificati questa settimana</p>
+          <div class="empty-state"><div class="emoji">📭</div><p>Nessun evento approvato questa settimana ancora.<br>Controlla più tardi!</p></div>`;
+        return;
+      }
+
+      const ids = [...new Set(eventi.map(e => e.politico_id))];
+      const politici = await db(`politici?id=in.(${ids.join(',')})&select=id,nome,cognome`);
+      const mapPol = Object.fromEntries(politici.map(p => [p.id, p]));
+
+      // Politici della squadra del giocatore
+      const miaSquadraIds = new Set(squadraCorrente?.politici || []);
+      const mioCapitano = squadraCorrente?.capitano_politico_id;
+
+      let html = `<p class="sezione-titolo">Tutti gli eventi verificati questa settimana</p>`;
+      html += `<div class="card" style="padding:16px">`;
+
+      eventi.forEach(e => {
+        const pol = mapPol[e.politico_id];
+        const nomePol = pol ? `${pol.cognome} ${pol.nome.charAt(0)}.` : '?';
+        const isMio = miaSquadraIds.has(e.politico_id);
+        const isCapMio = e.politico_id === mioCapitano;
+        const ptsFinali = isCapMio ? e.punti * 2 : e.punti;
+        const ptsStr = (ptsFinali > 0 ? '+' : '') + ptsFinali + ' pts';
+        const ptsCls = ptsFinali > 0 ? 'pos' : 'neg';
+
+        const dataStr = new Date(e.settimana + 'T00:00:00').toLocaleDateString('it-IT', { weekday:'short', day:'numeric', month:'short' });
+
+        let tagHtml = '';
+        if (isMio && isCapMio) {
+          tagHtml = `<span class="evento-tag tag-tua-cap">nella tua squadra ×2 capitano</span>`;
+        } else if (isMio && ptsFinali < 0) {
+          tagHtml = `<span class="evento-tag tag-tua-penalita">nella tua squadra — penalità</span>`;
+        } else if (isMio) {
+          tagHtml = `<span class="evento-tag tag-tua">nella tua squadra</span>`;
+        } else {
+          tagHtml = `<span class="tag-non-tua">non nella tua squadra</span>`;
+        }
+
+        const label = tipoLabel(e.tipo_evento);
+        html += `
+          <div class="evento-row">
+            <div class="evento-header">
+              <div class="evento-titolo">${nomePol} — ${label}</div>
+              <div class="evento-pts ${ptsCls}">${ptsStr}</div>
+            </div>
+            <div class="evento-meta">${dataStr} · ${e.fonte_url || '—'}</div>
+            ${tagHtml}
+          </div>`;
+      });
+
+      html += `</div>`;
+      html += `<div class="nota-eventi">Vedi tutti gli eventi di tutti i politici. I punti sono già calcolati con il moltiplicatore Capitano ×2.</div>`;
+
+      contenuto.innerHTML = html;
+      loading.style.display = 'none';
+      contenuto.style.display = 'block';
+
+    } catch(e) {
+      loading.innerHTML = `<p style="color:var(--rosso)">Errore: ${e.message}</p>`;
+    }
+  }
+
+  function tipoLabel(tipo) {
+    const m = {
+      talk_show: 'appare in talk show',
+      talk_show_doppio: 'appare in 2+ talk show',
+      voto_difforme: 'voto difforme dal gruppo',
+      dimissioni: 'dimissioni o rimozione',
+      smentito_pagella: 'smentito da Pagella Politica',
+      scuse_pubbliche: 'scuse pubbliche',
+      cambio_partito: 'cambia partito',
+      voto_sfiducia: 'voto di sfiducia',
+      governo_cade: 'il governo cade',
+      rinviato_giudizio: 'rinviato in giudizio',
+      post_cancellato: 'post cancellato',
+      nuovo_incarico: 'nuovo incarico',
+      corte_costituzionale: 'bocciato dalla Corte',
+      sparisce_media: 'sparisce dai media',
+      smentisce_se_stesso: 'smentisce se stesso',
+    };
+    return m[tipo] || tipo;
+  }
+
+  // ─────────────────────────────────────────────
+  // BRIGATE
+  // ─────────────────────────────────────────────
+  async function caricaBrigate() {
+    const loading = document.getElementById('loading-brigate');
+    const contenuto = document.getElementById('contenuto-brigate');
+    loading.style.display = 'block';
+    contenuto.style.display = 'none';
+
+    try {
+      const brigate = await db('brigate?order=created_at.asc&select=id,nome,capitano_id');
+      const miei_memberships = utenteCorrente
+        ? await dbAuth(`membri_brigata?user_id=eq.${utenteCorrente.id}&select=brigata_id`)
+        : [];
+      const miaBrigataId = miei_memberships[0]?.brigata_id || null;
+
+      // Punteggi per brigata: somma stagione_corrente_punti dei membri
+      const tutti_membri = await db('membri_brigata?select=user_id,brigata_id');
+      const userIds = [...new Set(tutti_membri.map(m => m.user_id))];
+      let mapPuntiUtente = {};
+      if (userIds.length) {
+        const utenti = await db(`users?id=in.(${userIds.join(',')})&select=id,nickname,nome,cognome,stagione_corrente_punti,livello`);
+        mapPuntiUtente = Object.fromEntries(utenti.map(u => [u.id, u]));
+      }
+
+      // Calcola punteggio per brigata
+      const puntiBrigata = {};
+      const membriBrigata = {};
+      tutti_membri.forEach(m => {
+        if (!puntiBrigata[m.brigata_id]) puntiBrigata[m.brigata_id] = 0;
+        if (!membriBrigata[m.brigata_id]) membriBrigata[m.brigata_id] = [];
+        puntiBrigata[m.brigata_id] += mapPuntiUtente[m.user_id]?.stagione_corrente_punti || 0;
+        membriBrigata[m.brigata_id].push(m.user_id);
+      });
+
+      // Ordina per punteggio
+      const brigadeOrdinate = [...brigate].sort((a, b) => (puntiBrigata[b.id] || 0) - (puntiBrigata[a.id] || 0));
+
+      let html = `<p class="sezione-titolo">Classifica brigate</p>`;
+
+      // Info brigata del giocatore
+      if (miaBrigataId) {
+        const miaBrig = brigate.find(b => b.id === miaBrigataId);
+        if (miaBrig) {
+          html += `<div class="brigata-info-top">
+            <div class="brigata-icon">⚓</div>
+            <div class="brigata-info-testo">
+              <h3>${miaBrig.nome}</h3>
+              <p>La tua brigata · ${membriBrigata[miaBrigataId]?.length || 0} membri · ${puntiBrigata[miaBrigataId] || 0} pts</p>
+            </div>
+          </div>`;
+        }
+      } else {
+        html += `<div class="card" style="text-align:center;padding:20px">
+          <div style="font-size:1.5rem;margin-bottom:8px">⚓</div>
+          <div style="font-size:0.85rem;color:var(--text2);line-height:1.5">Non sei ancora in nessuna brigata.<br>Diventa Capitano invitando 3 persone attive!</div>
+        </div>`;
+      }
+
+      // Classifica
+      if (brigadeOrdinate.length) {
+        html += `<div class="card" style="padding:0;overflow:hidden">`;
+        brigadeOrdinate.forEach((b, i) => {
+          const isMia = b.id === miaBrigataId;
+          const cap = mapPuntiUtente[b.capitano_id];
+          const capNome = cap ? (cap.nickname || `${cap.nome} ${cap.cognome?.charAt(0)}.`) : '?';
+          const nMembri = membriBrigata[b.id]?.length || 0;
+          const pts = puntiBrigata[b.id] || 0;
+          html += `
+            <div class="brigata-row ${isMia ? 'la-tua' : ''}">
+              <div class="brig-pos">${i + 1}</div>
+              <div class="brig-info">
+                <div class="brig-nome">${b.nome}${isMia ? ' <span style="font-size:0.7rem;color:#4a90d9">(tu)</span>' : ''}</div>
+                <div class="brig-sub">Cap: ${capNome} · ${nMembri} membri</div>
+              </div>
+              <div class="brig-right">
+                <div class="brig-pts ${isMia ? 'la-tua-c' : ''}">${pts} pts</div>
+                <span class="brig-tag ${isMia ? 'tua-t' : 'privati'}">${isMia ? 'la tua' : 'dettagli privati'}</span>
+              </div>
+            </div>`;
+        });
+        html += `</div>`;
+      } else {
+        html += `<div class="empty-state"><div class="emoji">⚓</div><p>Nessuna brigata ancora.<br>Sii il primo Capitano!</p></div>`;
+      }
+
+      // Dettaglio brigata del giocatore
+      if (miaBrigataId && membriBrigata[miaBrigataId]?.length) {
+        const miaBrig = brigate.find(b => b.id === miaBrigataId);
+        html += `<div class="dettaglio-brigata">`;
+        html += `<div class="dettaglio-titolo">DETTAGLIO ${miaBrig?.nome?.toUpperCase() || 'TUA BRIGATA'} — SOLO TU PUOI VEDERLO</div>`;
+        html += `<div class="card" style="padding:0 16px;overflow:hidden">`;
+        const membriOrdinati = membriBrigata[miaBrigataId]
+          .map(uid => mapPuntiUtente[uid])
+          .filter(Boolean)
+          .sort((a, b) => (b.stagione_corrente_punti || 0) - (a.stagione_corrente_punti || 0));
+
+        membriOrdinati.forEach(u => {
+          const iniz = inizialesDa(u.nome, u.cognome);
+          const [bg, fg] = coloreAvatar(u.nickname || u.nome);
+          const isCapitano = brigate.find(b => b.id === miaBrigataId)?.capitano_id === u.id;
+          html += `
+            <div class="membro-row">
+              <div class="membro-avatar" style="background:${bg};color:${fg}">${iniz}</div>
+              <div class="membro-nome">
+                ${u.nickname || u.nome}
+                ${isCapitano ? '<span class="cap-badge">Capitano</span>' : ''}
+              </div>
+              <div class="membro-pts">${u.stagione_corrente_punti || 0} pts</div>
+            </div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      html += `<div class="nota-brigate">Vedi nome, capitano, membri e punteggio totale di ogni brigata. I politici scelti e i dettagli interni sono visibili solo nella tua brigata.</div>`;
+
+      contenuto.innerHTML = html;
+      loading.style.display = 'none';
+      contenuto.style.display = 'block';
+
+    } catch(e) {
+      loading.innerHTML = `<p style="color:var(--rosso)">Errore: ${e.message}</p>`;
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // MERCATO
+  // ─────────────────────────────────────────────
+  async function apriMercato() {
+    const mercato = document.getElementById('view-mercato');
+    mercato.classList.add('aperto');
+    mercatoScelti = [];
+    aggiornaUIBudget();
+
+    // Carica roster settimana
+    const lista = document.getElementById('mercato-lista');
+    lista.innerHTML = '<div class="loading"><div class="spin"></div><br>Caricamento roster...</div>';
+
+    try {
+      const roster = await db(`roster_settimanale?settimana=eq.${settimanaCorrente}&disponibile=eq.true&select=politico_id,costo_lire`);
+      if (!roster.length) {
+        lista.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>Nessun roster pubblicato per questa settimana.<br>Torna più tardi!</p></div>';
+        return;
+      }
+      const ids = roster.map(r => r.politico_id).join(',');
+      const politici = await db(`politici?id=in.(${ids})&order=cognome.asc&select=id,nome,cognome,partito,ruolo_attuale`);
+      const mapCosto = Object.fromEntries(roster.map(r => [r.politico_id, r.costo_lire]));
+
+      rosterDisponibile = politici.map(p => ({ ...p, costo_lire: mapCosto[p.id] || 10 }));
+
+      renderRoster();
+    } catch(e) {
+      lista.innerHTML = `<p style="color:var(--rosso);padding:20px">Errore: ${e.message}</p>`;
+    }
+  }
+
+  function renderRoster() {
+    const lista = document.getElementById('mercato-lista');
+    const budgetSpeso = mercatoScelti.reduce((s, p) => s + p.costo_lire, 0);
+    const budgetRimasto = 100 - budgetSpeso;
+
+    lista.innerHTML = rosterDisponibile.map(p => {
+      const selIdx = mercatoScelti.findIndex(s => s.id === p.id);
+      const isSel = selIdx >= 0;
+      const isCap = isSel && mercatoScelti[selIdx].capitano;
+      const budgetOK = !isSel && p.costo_lire <= budgetRimasto;
+      const slotLiberi = mercatoScelti.length < 8;
+      const esaurito = !isSel && (!budgetOK || !slotLiberi);
+
+      let checkSymbol = '';
+      if (isCap) checkSymbol = '★';
+      else if (isSel) checkSymbol = '✓';
+
+      return `<div class="pol-mercato ${isCap ? 'capitano-sel' : isSel ? 'selezionato' : ''} ${esaurito ? 'esaurito' : ''}"
+        onclick="togglePoliticoMercato('${p.id}')">
+        <div class="pol-m-check">${checkSymbol}</div>
+        <div class="pol-m-info">
+          <div class="pol-m-nome">${p.cognome} ${p.nome}${isCap ? ' <span class="cap-badge">CAP ×2</span>' : ''}</div>
+          <div class="pol-m-sub">${p.partito || '—'}</div>
+        </div>
+        <div class="pol-m-costo">${p.costo_lire} L</div>
+      </div>`;
+    }).join('');
+  }
+
+  function togglePoliticoMercato(id) {
+    const pol = rosterDisponibile.find(p => p.id === id);
+    if (!pol) return;
+
+    const idx = mercatoScelti.findIndex(s => s.id === id);
+
+    if (idx === -1) {
+      // Non selezionato → aggiungi
+      const budgetSpeso = mercatoScelti.reduce((s, p) => s + p.costo_lire, 0);
+      if (mercatoScelti.length >= 8) { toast('Hai già 8 politici!', 'err'); return; }
+      if (budgetSpeso + pol.costo_lire > 100) { toast('Budget insufficiente!', 'err'); return; }
+      mercatoScelti.push({ ...pol, capitano: false });
+    } else if (!mercatoScelti[idx].capitano) {
+      // Selezionato senza capitano → nomina capitano
+      const haCapitano = mercatoScelti.some(p => p.capitano);
+      if (haCapitano) {
+        // Rimuovi capitano dal precedente
+        mercatoScelti = mercatoScelti.map(p => ({ ...p, capitano: false }));
+      }
+      mercatoScelti[idx].capitano = true;
+      toast('Capitano nominato! Vale doppio. ★', 'ok');
+    } else {
+      // È capitano → rimuovi
+      mercatoScelti.splice(idx, 1);
+    }
+
+    aggiornaUIBudget();
+    renderRoster();
+    renderChips();
+  }
+
+  function aggiornaUIBudget() {
+    const speso = mercatoScelti.reduce((s, p) => s + p.costo_lire, 0);
+    document.getElementById('budget-rimasto').textContent = 100 - speso;
+    document.getElementById('slot-rimasti').textContent = 8 - mercatoScelti.length;
+    const btn = document.getElementById('btn-conferma-squadra');
+    const haCapitano = mercatoScelti.some(p => p.capitano);
+    btn.disabled = mercatoScelti.length !== 8 || !haCapitano;
+    document.getElementById('mercato-istruzioni').innerHTML = mercatoScelti.length < 8
+      ? `Scegli <strong>${8 - mercatoScelti.length}</strong> politici ancora. Budget: <strong style="color:var(--oro)">${100 - speso} Lire</strong>.`
+      : !haCapitano
+        ? `<strong style="color:var(--oro)">Tocca un politico selezionato per nominarlo Capitano ×2!</strong>`
+        : `Squadra pronta! Conferma per bloccare la rosa fino a lunedì.`;
+  }
+
+  function renderChips() {
+    const el = document.getElementById('mercato-scelti');
+    el.innerHTML = mercatoScelti.map(p =>
+      `<span class="chip-pol ${p.capitano ? 'cap' : ''}">
+        ${p.capitano ? '★ ' : ''}${p.cognome}
+        <span class="remove" onclick="togglePoliticoMercato('${p.id}')">×</span>
+      </span>`
+    ).join('');
+  }
+
+  async function confermaSquadra() {
+    if (!utenteCorrente) { toast('Accedi prima!', 'err'); return; }
+    const haCapitano = mercatoScelti.some(p => p.capitano);
+    if (mercatoScelti.length !== 8 || !haCapitano) return;
+
+    const btn = document.getElementById('btn-conferma-squadra');
+    btn.disabled = true;
+    btn.textContent = 'Salvataggio...';
+
+    try {
+      const capitanoId = mercatoScelti.find(p => p.capitano).id;
+      const ids = mercatoScelti.map(p => p.id);
+
+      await dbAuth('squadre', {
+        method: 'POST',
+        prefer: 'resolution=merge-duplicates,return=minimal',
+        body: {
+          user_id: utenteCorrente.id,
+          settimana: settimanaCorrente,
+          politici: ids,
+          capitano_politico_id: capitanoId,
+          punti_gioco_totali: 0,
+          punti_rete_ricevuti: 0
+        }
+      });
+
+      await caricaSquadraCorrente();
+      chiudiMercato();
+      toast('✅ Squadra salvata! In bocca al lupo!', 'ok');
+      caricaSquadra();
+      caricaClassifica();
+
+    } catch(e) {
+      toast('Errore: ' + e.message, 'err');
+      btn.disabled = false;
+      btn.textContent = 'Conferma squadra';
+    }
+  }
+
+  function chiudiMercato() {
+    document.getElementById('view-mercato').classList.remove('aperto');
+  }
+
+  // ─────────────────────────────────────────────
+  // START
+  // ─────────────────────────────────────────────
+  init();
+</script>
+</body>
+</html>
