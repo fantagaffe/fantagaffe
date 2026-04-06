@@ -535,7 +535,7 @@
             <strong style="color:#f5c518">Settimana del ${sett}</strong>
             <span style="color:#888;font-size:0.85rem;margin-left:8px">${righe.length} politici</span>
           </div>
-          <button class="btn btn-sm" style="background:#1a3a5c;color:#7ec8e3" onclick="caricaRosterPerModifica('${sett}')">✏️ Modifica</button>
+          <button class="btn btn-sm" style="background:#1a3a5c;color:#7ec8e3" data-sett="${sett}" onclick="caricaRosterPerModifica(this.getAttribute('data-sett'))">✏️ Modifica</button>
         </div>`).join('');
     } catch(e) { el.innerHTML = `<div class="empty" style="color:#e57373">Errore: ${e.message}</div>`; }
   }
