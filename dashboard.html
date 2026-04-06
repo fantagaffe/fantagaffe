@@ -1745,12 +1745,20 @@
     // Form nuovo invito
     html += `
       <div class="invito-form">
-        <h3>✉️ Manda un invito via email</h3>
-        <p>Inserisci nome e email del tuo amico. Gli arriverà un link personalizzato per registrarsi.</p>
+        <h3>➕ Genera link di invito</h3>
+        <p>Inserisci nome e email del tuo amico. Il sistema genera un link univoco che puoi mandargli su WhatsApp o via email.</p>
         <input class="invito-input" id="invito-nome" type="text" placeholder="Nome dell'amico" autocomplete="off" />
         <input class="invito-input" id="invito-email" type="email" placeholder="Email dell'amico" autocomplete="off" />
-        <button class="btn-invita" id="btn-invita" onclick="mandaInvito()">Invia invito →</button>
+        <button class="btn-invita" id="btn-invita" onclick="mandaInvito()">Genera link →</button>
         <div id="msg-invito" style="margin-top:10px;font-size:0.82rem;display:none"></div>
+        <div id="box-link-generato" style="display:none;margin-top:14px;background:var(--bg3);border:1px solid rgba(245,197,24,0.3);border-radius:var(--radius-sm);padding:14px">
+          <div style="font-size:0.75rem;color:var(--text2);margin-bottom:8px">✅ Link generato per <strong id="nome-link-generato"></strong> — copialo e mandaglielo!</div>
+          <div id="testo-link-generato" style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--oro);word-break:break-all;line-height:1.5;margin-bottom:10px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-copia" id="btn-copia-link-gen" onclick="copiaLinkGenerato()">📋 Copia link</button>
+            <button class="btn-copia" id="btn-whatsapp-link-gen" style="background:rgba(37,211,102,0.12);border-color:rgba(37,211,102,0.3);color:#25d366" onclick="mandaWhatsapp()">💬 Apri WhatsApp</button>
+          </div>
+        </div>
       </div>`;
 
     // Lista inviti già inviati
@@ -1793,6 +1801,9 @@
     });
   }
 
+  // Variabile globale per il link appena generato (usata da copiaLinkGenerato e mandaWhatsapp)
+  let _linkGeneratoCorrente = '';
+
   async function mandaInvito() {
     const nome = document.getElementById('invito-nome').value.trim();
     const email = document.getElementById('invito-email').value.trim().toLowerCase();
@@ -1803,8 +1814,9 @@
     if (!email || !email.includes('@')) { mostraMsg(msg, 'Inserisci un\'email valida.', 'err'); return; }
 
     btn.disabled = true;
-    btn.textContent = 'Invio in corso...';
+    btn.textContent = 'Generazione...';
     msg.style.display = 'none';
+    document.getElementById('box-link-generato').style.display = 'none';
 
     try {
       // Genera token univoco
@@ -1822,37 +1834,52 @@
         }
       });
 
-      // Manda email via Supabase Auth (magic link personalizzato)
-      const linkInvito = `${window.location.origin}${window.location.pathname.replace('dashboard.html', '')}invito.html?token=${token}`;
+      // Costruisce il link corretto verso invito.html
+      const base = window.location.href.replace('dashboard.html', '');
+      const linkInvito = `${base}invito.html?token=${token}`;
+      _linkGeneratoCorrente = linkInvito;
 
-      await fetch(`${SUPABASE_URL}/auth/v1/magiclink`, {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: email,
-          data: {
-            invitante_nome: utenteCorrente.nome || utenteCorrente.nickname || 'Un amico',
-            link_invito: linkInvito,
-            nome_invitato: nome
-          }
-        })
-      });
+      // Mostra il box con il link da copiare
+      document.getElementById('nome-link-generato').textContent = nome;
+      document.getElementById('testo-link-generato').textContent = linkInvito;
+      document.getElementById('box-link-generato').style.display = 'block';
 
-      mostraMsg(msg, `✅ Invito inviato a ${nome}! Riceverà un'email con il link per registrarsi.`, 'ok');
+      // Svuota i campi del form
       document.getElementById('invito-nome').value = '';
       document.getElementById('invito-email').value = '';
 
-      // Ricarica la lista inviti dopo 1 secondo
-      setTimeout(() => caricaInviti(), 1200);
+      btn.disabled = false;
+      btn.textContent = 'Genera link →';
+
+      // Ricarica la lista inviti in fondo
+      setTimeout(() => caricaInviti(), 1000);
 
     } catch(e) {
       mostraMsg(msg, 'Errore: ' + e.message, 'err');
       btn.disabled = false;
-      btn.textContent = 'Invia invito →';
+      btn.textContent = 'Genera link →';
     }
+  }
+
+  function copiaLinkGenerato() {
+    if (!_linkGeneratoCorrente) return;
+    navigator.clipboard.writeText(_linkGeneratoCorrente).then(() => {
+      toast('✅ Link copiato!', 'ok');
+    }).catch(() => {
+      const el = document.createElement('textarea');
+      el.value = _linkGeneratoCorrente;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      toast('✅ Link copiato!', 'ok');
+    });
+  }
+
+  function mandaWhatsapp() {
+    if (!_linkGeneratoCorrente) return;
+    const testo = encodeURIComponent('Ciao! Ti invito a giocare a FantaGaffe — il fantasy game sulla politica italiana 🇮🇹\n\nRegistrati qui: ' + _linkGeneratoCorrente);
+    window.open('https://wa.me/?text=' + testo, '_blank');
   }
 
   function mostraMsg(el, testo, tipo) {
