@@ -723,19 +723,57 @@
   async function caricaUtenti() {
     const el = document.getElementById('lista-utenti');
     try {
-      const dati = await db('users?order=created_at.desc&select=id,nome,cognome,nickname,email,livello,onboarding_completato,created_at,paese');
+      const dati = await db('users?order=created_at.desc&select=id,nome,cognome,nickname,email,livello,onboarding_completato,created_at,paese,invited_by,is_attivo_questa_settimana,settimane_consecutive');
       if (!dati.length) { el.innerHTML = '<div class="empty">Nessun utente ancora.</div>'; return; }
+
+      // Mappa id -> nickname per mostrare chi ha invitato chi
+      const mapUtenti = Object.fromEntries(dati.map(u => [u.id, u.nickname || (u.nome + ' ' + u.cognome)]));
+
+      // Carica brigate per sapere chi è in quale brigata
+      let mapBrigata = {};
+      try {
+        const membri = await db('membri_brigata?select=user_id,brigata_id');
+        const brigate = await db('brigate?select=id,nome,capitano_id');
+        const mapBrigateNome = Object.fromEntries(brigate.map(b => [b.id, b.nome]));
+        const mapBrigateCap = Object.fromEntries(brigate.map(b => [b.id, b.capitano_id]));
+        membri.forEach(m => {
+          mapBrigata[m.user_id] = {
+            nome: mapBrigateNome[m.brigata_id] || '?',
+            capitano_id: mapBrigateCap[m.brigata_id]
+          };
+        });
+      } catch(e) {}
+
+      const livelloBadge = { membro: 'badge-attesa', capitano: 'badge-si', ammiraglio: '#1a3a5c' };
+
       el.innerHTML = `<p style="color:#888;font-size:0.85rem;margin-bottom:12px">${dati.length} utenti iscritti</p>
-        <table><thead><tr><th>Nickname</th><th>Nome</th><th>Email</th><th>Paese</th><th>Livello</th><th>Onboarding</th><th>Iscritto</th></tr></thead>
-        <tbody>${dati.map(u => `<tr>
-          <td><strong>@${u.nickname || '—'}</strong></td>
-          <td>${u.nome || ''} ${u.cognome || ''}</td>
-          <td style="font-size:0.8rem;color:#aaa">${u.email || '—'}</td>
-          <td>${u.paese || '—'}</td>
-          <td><span class="badge badge-si">${u.livello || 'membro'}</span></td>
-          <td><span class="badge ${u.onboarding_completato ? 'badge-si' : 'badge-attesa'}">${u.onboarding_completato ? '✅' : '⏳'}</span></td>
-          <td style="font-size:0.8rem;color:#aaa">${new Date(u.created_at).toLocaleDateString('it-IT')}</td>
-        </tr>`).join('')}
+        <table><thead><tr>
+          <th>Nickname</th><th>Nome</th><th>Email</th><th>Paese</th>
+          <th>Livello</th><th>Invitato da</th><th>Brigata</th>
+          <th>Attivo</th><th>Settimane</th><th>Iscritto</th>
+        </tr></thead>
+        <tbody>${dati.map(u => {
+          const invitante = u.invited_by ? (mapUtenti[u.invited_by] || '— (non trovato)') : '— fondatore';
+          const brigata = mapBrigata[u.id];
+          let brigadaCell = '— nessuna';
+          if (brigata) {
+            const isCap = brigata.capitano_id === u.id;
+            const invitanteCap = u.invited_by && mapBrigata[u.id]?.capitano_id === u.invited_by;
+            brigadaCell = `${brigata.nome}${invitanteCap ? ' <span style="color:#f5c518;font-size:0.75rem">(invitante)</span>' : ''}`;
+          }
+          return `<tr>
+            <td><strong>@${u.nickname || '—'}</strong></td>
+            <td style="font-size:0.85rem">${u.nome || ''} ${u.cognome || ''}</td>
+            <td style="font-size:0.8rem;color:#aaa">${u.email || '—'}</td>
+            <td style="font-size:0.8rem">${u.paese || '—'}</td>
+            <td><span class="badge ${livelloBadge[u.livello] || 'badge-attesa'}">${u.livello || 'membro'}</span></td>
+            <td style="font-size:0.8rem;color:#aaa">@${invitante}</td>
+            <td style="font-size:0.8rem">${brigadaCell}</td>
+            <td style="text-align:center">${u.is_attivo_questa_settimana ? '✅' : '—'}</td>
+            <td style="text-align:center;font-size:0.85rem">${u.settimane_consecutive || 0}</td>
+            <td style="font-size:0.8rem;color:#aaa">${new Date(u.created_at).toLocaleDateString('it-IT')}</td>
+          </tr>`;
+        }).join('')}
         </tbody></table>`;
     } catch(e) { el.innerHTML = `<div class="empty" style="color:#e57373">Errore: ${e.message}</div>`; }
   }
