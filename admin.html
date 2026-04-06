@@ -536,8 +536,17 @@
             <span style="color:#888;font-size:0.85rem;margin-left:8px">${righe.length} politici</span>
           </div>
           <button class="btn btn-sm" style="background:#1a3a5c;color:#7ec8e3" data-sett="${sett}" onclick="caricaRosterPerModifica(this.getAttribute('data-sett'))">✏️ Modifica</button>
+          <button class="btn btn-sm btn-danger" data-sett="${sett}" onclick="eliminaRoster(this.getAttribute('data-sett'))">🗑️ Elimina</button>
         </div>`).join('');
     } catch(e) { el.innerHTML = `<div class="empty" style="color:#e57373">Errore: ${e.message}</div>`; }
+  }
+
+  async function eliminaRoster(settimana) {
+    if (!confirm(`Eliminare il roster della settimana del ${settimana}? I dati non sono recuperabili.`)) return;
+    try {
+      await db(`roster_settimanale?settimana=eq.${settimana}`, { method: 'DELETE', prefer: 'return=minimal' });
+      caricaRosterEsistenti();
+    } catch(e) { alert('Errore: ' + e.message); }
   }
 
   async function caricaRosterPerModifica(settimana) {
