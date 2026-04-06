@@ -390,7 +390,7 @@
       if (!dati.length) { el.innerHTML = '<div class="empty">Nessun politico ancora.</div>'; return; }
       el.innerHTML = `<table><thead><tr><th>Nome</th><th>Partito</th><th>Ruolo</th><th>Lire</th><th>Disponibile</th><th>Azioni</th></tr></thead><tbody>
         ${dati.map(p => `<tr>
-          <td><strong>${p.nome} ${p.cognome}</strong></td>
+          <td><strong>${p.cognome} ${p.nome}</strong></td>
           <td>${p.partito || '—'}</td>
           <td style="font-size:0.8rem;color:#aaa">${p.ruolo_attuale || '—'}</td>
           <td><span class="punti-badge">${p.costo_lire}</span></td>
@@ -498,8 +498,8 @@
         <p style="color:#888;font-size:0.85rem;margin-bottom:10px">Seleziona i politici e imposta il costo in Lire:</p>
         <table><thead><tr><th>✓</th><th>Politico</th><th>Partito</th><th>Lire</th></tr></thead><tbody>
         ${politiciGlobali.map(p => `<tr>
-          <td><input type="checkbox" id="rc-${p.id}" checked /></td>
-          <td>${p.nome} ${p.cognome}</td>
+          <td><input type="checkbox" id="rc-${p.id}" /></td>
+          <td>${p.cognome} ${p.nome}</td>
           <td style="font-size:0.8rem;color:#aaa">${p.partito || '—'}</td>
           <td><input type="number" id="rl-${p.id}" value="${p.costo_lire}" min="1" max="100"
             style="width:60px;padding:4px;background:#0f0f1a;border:1px solid #333;color:#fff;border-radius:4px" /></td>
@@ -560,7 +560,7 @@
         <table><thead><tr><th>&#10003;</th><th>Politico</th><th>Partito</th><th>Lire</th></tr></thead><tbody>
         ${politiciGlobali.map(p => `<tr>
           <td><input type="checkbox" id="rc-${p.id}" /></td>
-          <td>${p.nome} ${p.cognome}</td>
+          <td>${p.cognome} ${p.nome}</td>
           <td style="font-size:0.8rem;color:#aaa">${p.partito || '&#8212;'}</td>
           <td><input type="number" id="rl-${p.id}" value="${p.costo_lire}" min="1" max="100"
             style="width:60px;padding:4px;background:#0f0f1a;border:1px solid #333;color:#fff;border-radius:4px" /></td>
