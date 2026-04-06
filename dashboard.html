@@ -1135,6 +1135,20 @@
   // ─────────────────────────────────────────────
   // CLASSIFICA
   // ─────────────────────────────────────────────
+  // Calcola punti reali in tempo reale dagli eventi approvati questa settimana
+  async function calcolaPuntiReali(userId, politiciIds, capitanoId) {
+    if (!politiciIds || !politiciIds.length) return 0;
+    try {
+      const eventi = await db(`eventi?approvato=eq.true&settimana=eq.${settimanaCorrente}&politico_id=in.(${politiciIds.join(',')})`);
+      let tot = 0;
+      eventi.forEach(e => {
+        const pts = e.politico_id === capitanoId ? e.punti * 2 : e.punti;
+        tot += pts;
+      });
+      return tot;
+    } catch(e) { return 0; }
+  }
+
   async function caricaClassifica() {
     const loading = document.getElementById('loading-classifica');
     const contenuto = document.getElementById('contenuto-classifica');
@@ -1142,12 +1156,32 @@
     contenuto.style.display = 'none';
 
     try {
-      // Prendi top 10 + utente corrente
-      const top10 = await db(`users?order=stagione_corrente_punti.desc&limit=10&select=id,nickname,nome,cognome,livello,stagione_corrente_punti`);
+      // Prendi tutti gli utenti ordinati per punti stagione
+      const tuttiUtenti = await db(`users?order=stagione_corrente_punti.desc&select=id,nickname,nome,cognome,livello,stagione_corrente_punti`);
+
+      // Calcola punti reali settimana corrente per ogni utente con squadra
+      const squadreSettimana = await db(`squadre?settimana=eq.${settimanaCorrente}&select=user_id,politici,capitano_politico_id,punti_gioco_totali`);
+      const mapSquadre = Object.fromEntries(squadreSettimana.map(s => [s.user_id, s]));
+
+      // Calcola punti reali per il giocatore corrente
+      let puntiRealiMiei = 0;
+      if (utenteCorrente && mapSquadre[utenteCorrente.id]) {
+        const sq = mapSquadre[utenteCorrente.id];
+        puntiRealiMiei = await calcolaPuntiReali(utenteCorrente.id, sq.politici, sq.capitano_politico_id);
+      }
+
+      // Costruisci classifica combinata: punti stagione + punti reali settimana
+      const classificaConPunti = tuttiUtenti.map(u => {
+        const sq = mapSquadre[u.id];
+        return { ...u, puntiSettimana: sq ? sq.punti_gioco_totali : 0 };
+      });
+
+      // La posizione nella classifica assoluta
+      const miaPos = classificaConPunti.findIndex(u => utenteCorrente && u.id === utenteCorrente.id);
 
       let html = '';
 
-      // Se l'utente non ha squadra questa settimana → CTA
+      // CTA se non ha squadra
       if (utenteCorrente && !squadraCorrente) {
         html += `
           <div class="cta-squadra">
@@ -1158,7 +1192,7 @@
           </div>`;
       }
 
-      // Countdown al lunedì successivo
+      // Countdown
       const prossLun = new Date(settimanaCorrente + 'T00:00:00');
       prossLun.setDate(prossLun.getDate() + 7);
       const msRimasti = prossLun - new Date();
@@ -1170,27 +1204,33 @@
           <span class="countdown-time">${gg}g ${hh}h</span>
         </div>`;
 
-      // Hero posizione utente
+      // Hero posizione + punti reali
       if (utenteCorrente && squadraCorrente) {
-        const posizione = top10.findIndex(u => u.id === utenteCorrente.id) + 1;
-        const sopra = top10[posizione - 2];
-        const diffPts = sopra ? (sopra.stagione_corrente_punti || 0) - (utenteCorrente.stagione_corrente_punti || 0) : 0;
+        const posMia = miaPos >= 0 ? miaPos + 1 : '—';
         html += `
           <div class="classifica-hero">
             <div class="pos-label">La tua posizione</div>
-            <div class="pos-num">${posizione || '—'}</div>
-            <div class="pts-big">${utenteCorrente.stagione_corrente_punti || 0} pts</div>
+            <div class="pos-num">${posMia}</div>
+            <div class="pts-big">${utenteCorrente.stagione_corrente_punti || 0} pts stagione</div>
+            ${puntiRealiMiei !== 0 ? `<div style="font-size:0.8rem;color:var(--text2);margin-top:4px">+${puntiRealiMiei} pts questa settimana</div>` : ''}
           </div>`;
-        if (sopra && diffPts > 0) {
-          html += `<div class="motivazionale">
-            <strong>@${sopra.nickname}</strong> ti supera di soli <strong>${diffPts} punti</strong>.
-            Una gaffe dei tuoi politici questa settimana e lo scavalchi. 💪
-          </div>`;
+
+        // Messaggio motivazionale con chi è sopra
+        if (miaPos > 0) {
+          const sopra = classificaConPunti[miaPos - 1];
+          const diff = (sopra.stagione_corrente_punti || 0) - (utenteCorrente.stagione_corrente_punti || 0);
+          if (diff >= 0) {
+            html += `<div class="motivazionale">
+              <strong>@${sopra.nickname || sopra.nome}</strong> ti supera di <strong>${diff} punti</strong>.
+              Una gaffe dei tuoi politici questa settimana e lo scavalchi. 💪
+            </div>`;
+          }
         }
       }
 
-      // Top 10
-      html += `<p class="sezione-titolo">Top 10 classifica</p>`;
+      // TOP 10
+      const top10 = classificaConPunti.slice(0, 10);
+      html += `<p class="sezione-titolo">Top 10 classifica stagione</p>`;
       html += `<div class="card" style="padding:0;overflow:hidden"><div class="rank-list">`;
 
       const posEmoji = ['🥇','🥈','🥉'];
@@ -1218,8 +1258,36 @@
       if (!top10.length) {
         html += `<div class="empty-state"><div class="emoji">🏛️</div><p>Nessun giocatore ancora.<br>Sii il primo a scegliere la squadra!</p></div>`;
       }
-
       html += `</div></div>`;
+
+      // INTORNO A TE — 2 sopra + tu + 2 sotto (solo se sei fuori top 10)
+      if (utenteCorrente && miaPos >= 10) {
+        const inizio = Math.max(0, miaPos - 2);
+        const fine = Math.min(classificaConPunti.length, miaPos + 3);
+        const intorno = classificaConPunti.slice(inizio, fine);
+
+        html += `<p class="sezione-titolo" style="margin-top:16px">Intorno a te</p>`;
+        html += `<div class="card" style="padding:0;overflow:hidden"><div class="rank-list">`;
+        intorno.forEach((u, idx) => {
+          const posReale = inizio + idx + 1;
+          const eTu = utenteCorrente && u.id === utenteCorrente.id;
+          const iniz = inizialesDa(u.nome, u.cognome);
+          const [bg, fg] = coloreAvatar(u.nickname || u.nome);
+          const livClasse = { membro: 'badge-membro', capitano: 'badge-capitano', ammiraglio: 'badge-ammiraglio' }[u.livello] || 'badge-membro';
+          html += `
+            <div class="rank-row ${eTu ? 'tu' : ''}">
+              <div class="rank-pos">${posReale}</div>
+              <div class="rank-avatar" style="background:${bg};color:${fg}">${iniz}</div>
+              <div class="rank-info">
+                <div class="rank-nick ${eTu ? 'tu-label' : ''}">@${u.nickname || u.nome}</div>
+                <span class="badge-liv ${livClasse}">${u.livello || 'membro'}</span>
+              </div>
+              <div class="rank-pts ${(u.stagione_corrente_punti || 0) > 0 ? 'high' : ''}">${u.stagione_corrente_punti || 0}</div>
+            </div>`;
+        });
+        html += `</div></div>`;
+      }
+
       contenuto.innerHTML = html;
       loading.style.display = 'none';
       contenuto.style.display = 'block';
