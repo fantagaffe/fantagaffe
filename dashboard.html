@@ -858,6 +858,120 @@
     }
     .toast.ok { border-color: rgba(0,146,70,0.4); color: #4dbb84; }
     .toast.err { border-color: rgba(206,43,55,0.4); color: #e87070; }
+
+    /* ── INVITI ── */
+    .invito-form {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .invito-form h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 1px;
+      color: var(--oro);
+      margin-bottom: 6px;
+    }
+    .invito-form p {
+      font-size: 0.82rem;
+      color: var(--text2);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .invito-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: 'DM Sans', sans-serif;
+      margin-bottom: 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .invito-input:focus { border-color: rgba(245,197,24,0.4); }
+    .invito-input::placeholder { color: var(--text3); }
+    .btn-invita {
+      width: 100%;
+      padding: 13px;
+      background: var(--oro);
+      color: #000;
+      border: none;
+      border-radius: 50px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-invita:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-invita:not(:disabled):active { opacity: 0.85; }
+
+    .invito-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+    .invito-row:last-child { border-bottom: none; }
+    .invito-email {
+      flex: 1;
+      font-size: 0.85rem;
+      color: var(--text);
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .invito-stato {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+    .stato-inviato { background: rgba(245,197,24,0.12); color: var(--oro); }
+    .stato-accettato { background: rgba(0,146,70,0.15); color: #4dbb84; }
+    .stato-scaduto { background: var(--rosso-dim); color: #e87070; }
+
+    .invito-link-box {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+    .invito-link-box p {
+      font-size: 0.78rem;
+      color: var(--text2);
+      margin-bottom: 8px;
+    }
+    .invito-link-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--oro);
+      word-break: break-all;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+    .btn-copia {
+      padding: 8px 18px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      color: var(--text2);
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-copia:active { border-color: var(--oro); color: var(--oro); }
   </style>
 </head>
 <body>
@@ -907,6 +1021,13 @@
       <div class="spin"></div><br>Caricamento brigate...
     </div>
     <div id="contenuto-brigate" style="display:none"></div>
+  </div>
+
+  <!-- VIEW: INVITI -->
+  <div class="view" id="view-inviti">
+    <div id="contenuto-inviti">
+      <div class="loading"><div class="spin"></div><br>Caricamento...</div>
+    </div>
   </div>
 
 </main>
@@ -959,6 +1080,10 @@
     <span class="nav-icon">⚓</span>
     <span class="nav-label">Brigate</span>
   </button>
+  <button class="nav-tab" onclick="mostraView('inviti', this)">
+    <span class="nav-icon">✉️</span>
+    <span class="nav-label">Invita</span>
+  </button>
 </nav>
 
 <script>
@@ -973,13 +1098,13 @@
   // ─────────────────────────────────────────────
   let utenteCorrente = null;
   let settimanaCorrente = lunediDiQuestaSettimana();
-  let squadraCorrente = null; // squadra salvata questa settimana
-  let mercatoScelti = []; // [{id, nome, cognome, costo, capitano: bool}]
+  let squadraCorrente = null;
+  let mercatoScelti = [];
   let rosterDisponibile = [];
 
   function lunediDiQuestaSettimana() {
     const oggi = new Date();
-    const giorno = oggi.getDay(); // 0=dom, 1=lun...
+    const giorno = oggi.getDay();
     const diff = giorno === 0 ? -6 : 1 - giorno;
     const lun = new Date(oggi);
     lun.setDate(oggi.getDate() + diff);
@@ -1069,16 +1194,13 @@
   // INIT
   // ─────────────────────────────────────────────
   async function init() {
-    // Aggiorna badge settimana
     const d = new Date(settimanaCorrente + 'T00:00:00');
     document.getElementById('badge-settimana').textContent =
       'Sett. ' + d.toLocaleDateString('it-IT', { day:'2-digit', month:'2-digit' });
 
-    // Carica utente
     try {
       const session = await getSession();
       if (!session) {
-        // Non loggato → redirect al login
         window.location.href = 'login.html';
         return;
       }
@@ -1089,14 +1211,10 @@
         document.getElementById('avatar-header').textContent = iniz;
       }
     } catch(e) {
-      // Se non c'è sessione, mostra comunque la dashboard con dati demo
       console.log('Sessione non trovata, modalità demo');
     }
 
-    // Carica squadra attuale
     await caricaSquadraCorrente();
-
-    // Carica prima view
     caricaClassifica();
   }
 
@@ -1120,6 +1238,7 @@
     if (nome === 'squadra') caricaSquadra();
     if (nome === 'eventi') caricaEventi();
     if (nome === 'brigate') caricaBrigate();
+    if (nome === 'inviti') caricaInviti();
   }
 
   // ─────────────────────────────────────────────
@@ -1135,7 +1254,6 @@
   // ─────────────────────────────────────────────
   // CLASSIFICA
   // ─────────────────────────────────────────────
-  // Calcola punti reali in tempo reale dagli eventi approvati questa settimana
   async function calcolaPuntiReali(userId, politiciIds, capitanoId) {
     if (!politiciIds || !politiciIds.length) return 0;
     try {
@@ -1156,32 +1274,25 @@
     contenuto.style.display = 'none';
 
     try {
-      // Prendi tutti gli utenti ordinati per punti stagione
       const tuttiUtenti = await db(`users?order=stagione_corrente_punti.desc&select=id,nickname,nome,cognome,livello,stagione_corrente_punti`);
-
-      // Calcola punti reali settimana corrente per ogni utente con squadra
       const squadreSettimana = await db(`squadre?settimana=eq.${settimanaCorrente}&select=user_id,politici,capitano_politico_id,punti_gioco_totali`);
       const mapSquadre = Object.fromEntries(squadreSettimana.map(s => [s.user_id, s]));
 
-      // Calcola punti reali per il giocatore corrente
       let puntiRealiMiei = 0;
       if (utenteCorrente && mapSquadre[utenteCorrente.id]) {
         const sq = mapSquadre[utenteCorrente.id];
         puntiRealiMiei = await calcolaPuntiReali(utenteCorrente.id, sq.politici, sq.capitano_politico_id);
       }
 
-      // Costruisci classifica combinata: punti stagione + punti reali settimana
       const classificaConPunti = tuttiUtenti.map(u => {
         const sq = mapSquadre[u.id];
         return { ...u, puntiSettimana: sq ? sq.punti_gioco_totali : 0 };
       });
 
-      // La posizione nella classifica assoluta
       const miaPos = classificaConPunti.findIndex(u => utenteCorrente && u.id === utenteCorrente.id);
 
       let html = '';
 
-      // CTA se non ha squadra
       if (utenteCorrente && !squadraCorrente) {
         html += `
           <div class="cta-squadra">
@@ -1192,7 +1303,6 @@
           </div>`;
       }
 
-      // Countdown
       const prossLun = new Date(settimanaCorrente + 'T00:00:00');
       prossLun.setDate(prossLun.getDate() + 7);
       const msRimasti = prossLun - new Date();
@@ -1204,7 +1314,6 @@
           <span class="countdown-time">${gg}g ${hh}h</span>
         </div>`;
 
-      // Hero posizione + punti reali
       if (utenteCorrente && squadraCorrente) {
         const posMia = miaPos >= 0 ? miaPos + 1 : '—';
         html += `
@@ -1215,7 +1324,6 @@
             ${puntiRealiMiei !== 0 ? `<div style="font-size:0.8rem;color:var(--text2);margin-top:4px">+${puntiRealiMiei} pts questa settimana</div>` : ''}
           </div>`;
 
-        // Messaggio motivazionale con chi è sopra
         if (miaPos > 0) {
           const sopra = classificaConPunti[miaPos - 1];
           const diff = (sopra.stagione_corrente_punti || 0) - (utenteCorrente.stagione_corrente_punti || 0);
@@ -1228,7 +1336,6 @@
         }
       }
 
-      // TOP 10
       const top10 = classificaConPunti.slice(0, 10);
       html += `<p class="sezione-titolo">Top 10 classifica stagione</p>`;
       html += `<div class="card" style="padding:0;overflow:hidden"><div class="rank-list">`;
@@ -1260,7 +1367,6 @@
       }
       html += `</div></div>`;
 
-      // INTORNO A TE — 2 sopra + tu + 2 sotto (solo se sei fuori top 10)
       if (utenteCorrente && miaPos >= 10) {
         const inizio = Math.max(0, miaPos - 2);
         const fine = Math.min(classificaConPunti.length, miaPos + 3);
@@ -1326,12 +1432,10 @@
         return;
       }
 
-      // Carica dettagli politici della squadra
       const ids = squadraCorrente.politici.join(',');
       const politici = await db(`politici?id=in.(${ids})&select=id,nome,cognome,partito,ruolo_attuale,costo_lire`);
       const mapPol = Object.fromEntries(politici.map(p => [p.id, p]));
 
-      // Carica eventi approvati questa settimana per questi politici
       const eventi = await db(`eventi?approvato=eq.true&settimana=eq.${settimanaCorrente}&politico_id=in.(${ids})`);
       const puntiByCap = {};
       eventi.forEach(e => {
@@ -1342,7 +1446,6 @@
       let totale = 0;
       let html = `<p class="sezione-titolo">I tuoi 8 politici questa settimana</p>`;
 
-      // Totale punti
       squadraCorrente.politici.forEach(pid => {
         const punti = puntiByCap[pid] || 0;
         const isCapPol = pid === squadraCorrente.capitano_politico_id;
@@ -1354,7 +1457,6 @@
         <span class="totale-pts">${totale} pts</span>
       </div>`;
 
-      // Lista politici
       squadraCorrente.politici.forEach(pid => {
         const p = mapPol[pid];
         if (!p) return;
@@ -1417,7 +1519,6 @@
       const politici = await db(`politici?id=in.(${ids.join(',')})&select=id,nome,cognome`);
       const mapPol = Object.fromEntries(politici.map(p => [p.id, p]));
 
-      // Politici della squadra del giocatore
       const miaSquadraIds = new Set(squadraCorrente?.politici || []);
       const mioCapitano = squadraCorrente?.capitano_politico_id;
 
@@ -1507,7 +1608,6 @@
         : [];
       const miaBrigataId = miei_memberships[0]?.brigata_id || null;
 
-      // Punteggi per brigata: somma stagione_corrente_punti dei membri
       const tutti_membri = await db('membri_brigata?select=user_id,brigata_id');
       const userIds = [...new Set(tutti_membri.map(m => m.user_id))];
       let mapPuntiUtente = {};
@@ -1516,7 +1616,6 @@
         mapPuntiUtente = Object.fromEntries(utenti.map(u => [u.id, u]));
       }
 
-      // Calcola punteggio per brigata
       const puntiBrigata = {};
       const membriBrigata = {};
       tutti_membri.forEach(m => {
@@ -1526,12 +1625,10 @@
         membriBrigata[m.brigata_id].push(m.user_id);
       });
 
-      // Ordina per punteggio
       const brigadeOrdinate = [...brigate].sort((a, b) => (puntiBrigata[b.id] || 0) - (puntiBrigata[a.id] || 0));
 
       let html = `<p class="sezione-titolo">Classifica brigate</p>`;
 
-      // Info brigata del giocatore
       if (miaBrigataId) {
         const miaBrig = brigate.find(b => b.id === miaBrigataId);
         if (miaBrig) {
@@ -1550,7 +1647,6 @@
         </div>`;
       }
 
-      // Classifica
       if (brigadeOrdinate.length) {
         html += `<div class="card" style="padding:0;overflow:hidden">`;
         brigadeOrdinate.forEach((b, i) => {
@@ -1577,7 +1673,6 @@
         html += `<div class="empty-state"><div class="emoji">⚓</div><p>Nessuna brigata ancora.<br>Sii il primo Capitano!</p></div>`;
       }
 
-      // Dettaglio brigata del giocatore
       if (miaBrigataId && membriBrigata[miaBrigataId]?.length) {
         const miaBrig = brigate.find(b => b.id === miaBrigataId);
         html += `<div class="dettaglio-brigata">`;
@@ -1617,6 +1712,156 @@
   }
 
   // ─────────────────────────────────────────────
+  // INVITI
+  // ─────────────────────────────────────────────
+  async function caricaInviti() {
+    const contenuto = document.getElementById('contenuto-inviti');
+    contenuto.innerHTML = '<div class="loading"><div class="spin"></div><br>Caricamento...</div>';
+
+    if (!utenteCorrente) {
+      contenuto.innerHTML = `<div class="empty-state"><div class="emoji">🔐</div><p>Accedi per invitare amici.</p></div>`;
+      return;
+    }
+
+    // Link personale dell'utente
+    const linkPersonale = `${window.location.origin}${window.location.pathname.replace('dashboard.html', '')}invito.html?ref=${utenteCorrente.invite_code || utenteCorrente.id}`;
+
+    // Carica inviti già inviati
+    let inviti = [];
+    try {
+      inviti = await dbAuth(`inviti?invitante_id=eq.${utenteCorrente.id}&order=created_at.desc`);
+    } catch(e) {}
+
+    let html = `<p class="sezione-titolo">Invita i tuoi amici</p>`;
+
+    // Box link personale
+    html += `
+      <div class="invito-link-box">
+        <p>Il tuo link personale — condividilo direttamente:</p>
+        <div class="invito-link-text" id="link-testo">${linkPersonale}</div>
+        <button class="btn-copia" onclick="copiaLink('${linkPersonale}')">📋 Copia link</button>
+      </div>`;
+
+    // Form nuovo invito
+    html += `
+      <div class="invito-form">
+        <h3>✉️ Manda un invito via email</h3>
+        <p>Inserisci nome e email del tuo amico. Gli arriverà un link personalizzato per registrarsi.</p>
+        <input class="invito-input" id="invito-nome" type="text" placeholder="Nome dell'amico" autocomplete="off" />
+        <input class="invito-input" id="invito-email" type="email" placeholder="Email dell'amico" autocomplete="off" />
+        <button class="btn-invita" id="btn-invita" onclick="mandaInvito()">Invia invito →</button>
+        <div id="msg-invito" style="margin-top:10px;font-size:0.82rem;display:none"></div>
+      </div>`;
+
+    // Lista inviti già inviati
+    if (inviti.length) {
+      html += `<p class="sezione-titolo">I tuoi inviti (${inviti.length})</p>`;
+      html += `<div class="card" style="padding:0 16px;overflow:hidden">`;
+      inviti.forEach(inv => {
+        const statoClass = inv.stato === 'accettato' ? 'stato-accettato' : inv.stato === 'scaduto' ? 'stato-scaduto' : 'stato-inviato';
+        const statoLabel = inv.stato === 'accettato' ? '✅ accettato' : inv.stato === 'scaduto' ? 'scaduto' : '⏳ in attesa';
+        html += `
+          <div class="invito-row">
+            <div class="invito-email">${inv.email_invitato}</div>
+            <span class="invito-stato ${statoClass}">${statoLabel}</span>
+          </div>`;
+      });
+      html += `</div>`;
+    } else {
+      html += `
+        <div class="empty-state" style="padding:32px 20px">
+          <div class="emoji">📭</div>
+          <p>Non hai ancora invitato nessuno.<br>Ogni persona che inviti è collegata a te per sempre.</p>
+        </div>`;
+    }
+
+    contenuto.innerHTML = html;
+  }
+
+  function copiaLink(link) {
+    navigator.clipboard.writeText(link).then(() => {
+      toast('✅ Link copiato!', 'ok');
+    }).catch(() => {
+      // Fallback per browser che non supportano clipboard
+      const el = document.createElement('textarea');
+      el.value = link;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      toast('✅ Link copiato!', 'ok');
+    });
+  }
+
+  async function mandaInvito() {
+    const nome = document.getElementById('invito-nome').value.trim();
+    const email = document.getElementById('invito-email').value.trim().toLowerCase();
+    const msg = document.getElementById('msg-invito');
+    const btn = document.getElementById('btn-invita');
+
+    if (!nome) { mostraMsg(msg, 'Inserisci il nome dell\'amico.', 'err'); return; }
+    if (!email || !email.includes('@')) { mostraMsg(msg, 'Inserisci un\'email valida.', 'err'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Invio in corso...';
+    msg.style.display = 'none';
+
+    try {
+      // Genera token univoco
+      const token = 'INV' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+      // Salva invito nel database
+      await dbAuth('inviti', {
+        method: 'POST',
+        prefer: 'return=minimal',
+        body: {
+          invitante_id: utenteCorrente.id,
+          email_invitato: email,
+          stato: 'inviato',
+          token: token
+        }
+      });
+
+      // Manda email via Supabase Auth (magic link personalizzato)
+      const linkInvito = `${window.location.origin}${window.location.pathname.replace('dashboard.html', '')}invito.html?token=${token}`;
+
+      await fetch(`${SUPABASE_URL}/auth/v1/magiclink`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email,
+          data: {
+            invitante_nome: utenteCorrente.nome || utenteCorrente.nickname || 'Un amico',
+            link_invito: linkInvito,
+            nome_invitato: nome
+          }
+        })
+      });
+
+      mostraMsg(msg, `✅ Invito inviato a ${nome}! Riceverà un'email con il link per registrarsi.`, 'ok');
+      document.getElementById('invito-nome').value = '';
+      document.getElementById('invito-email').value = '';
+
+      // Ricarica la lista inviti dopo 1 secondo
+      setTimeout(() => caricaInviti(), 1200);
+
+    } catch(e) {
+      mostraMsg(msg, 'Errore: ' + e.message, 'err');
+      btn.disabled = false;
+      btn.textContent = 'Invia invito →';
+    }
+  }
+
+  function mostraMsg(el, testo, tipo) {
+    el.textContent = testo;
+    el.style.display = 'block';
+    el.style.color = tipo === 'ok' ? '#4dbb84' : '#e87070';
+  }
+
+  // ─────────────────────────────────────────────
   // MERCATO
   // ─────────────────────────────────────────────
   async function apriMercato() {
@@ -1625,7 +1870,6 @@
     mercatoScelti = [];
     aggiornaUIBudget();
 
-    // Carica roster settimana
     const lista = document.getElementById('mercato-lista');
     lista.innerHTML = '<div class="loading"><div class="spin"></div><br>Caricamento roster...</div>';
 
@@ -1683,22 +1927,18 @@
     const idx = mercatoScelti.findIndex(s => s.id === id);
 
     if (idx === -1) {
-      // Non selezionato → aggiungi
       const budgetSpeso = mercatoScelti.reduce((s, p) => s + p.costo_lire, 0);
       if (mercatoScelti.length >= 8) { toast('Hai già 8 politici!', 'err'); return; }
       if (budgetSpeso + pol.costo_lire > 100) { toast('Budget insufficiente!', 'err'); return; }
       mercatoScelti.push({ ...pol, capitano: false });
     } else if (!mercatoScelti[idx].capitano) {
-      // Selezionato senza capitano → nomina capitano
       const haCapitano = mercatoScelti.some(p => p.capitano);
       if (haCapitano) {
-        // Rimuovi capitano dal precedente
         mercatoScelti = mercatoScelti.map(p => ({ ...p, capitano: false }));
       }
       mercatoScelti[idx].capitano = true;
       toast('Capitano nominato! Vale doppio. ★', 'ok');
     } else {
-      // È capitano → rimuovi
       mercatoScelti.splice(idx, 1);
     }
 
