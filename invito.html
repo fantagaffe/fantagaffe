@@ -141,31 +141,52 @@
   async function caricaInvito() {
     const params = new URLSearchParams(window.location.search);
     tokenInvito = params.get('token');
+
     if (!tokenInvito) {
-      mostraErrore('Link non valido. Chiedi un nuovo invito.');
       document.getElementById('stato-caricamento').style.display = 'none';
+      mostraErrore('Link non valido. Chiedi un nuovo invito.');
       return;
     }
+
+    // Legge solo l'invito — senza join a users
     const { data, error } = await supabase
       .from('inviti')
-      .select('*, users!invitante_id(nome, cognome)')
+      .select('id, invitante_id, email_invitato, stato')
       .eq('token', tokenInvito)
       .single();
+
     document.getElementById('stato-caricamento').style.display = 'none';
+
     if (error || !data) {
-      mostraErrore('Invito non trovato. Il link potrebbe essere errato.');
+      mostraErrore('Invito non trovato. Errore: ' + (error?.message || 'nessun dato'));
       return;
     }
+
     if (data.stato === 'accettato') {
       mostraErrore('Questo invito è già stato usato. Ogni invito è valido una sola volta.');
       return;
     }
+
     if (data.stato === 'scaduto') {
       mostraErrore('Questo invito è scaduto. Chiedi un nuovo invito.');
       return;
     }
+
     invito = data;
-    const nomeInvitante = data.users ? `${data.users.nome} ${data.users.cognome}` : 'un amico';
+
+    // Legge il nome dell'invitante separatamente
+    let nomeInvitante = 'un amico';
+    if (data.invitante_id) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('nickname, nome')
+        .eq('id', data.invitante_id)
+        .single();
+      if (userData) {
+        nomeInvitante = userData.nickname || userData.nome || 'un amico';
+      }
+    }
+
     document.getElementById('msg-invito').innerHTML =
       `Sei stato invitato da <strong>${nomeInvitante}</strong> a entrare in FantaGaffe!`;
     document.getElementById('email').value = data.email_invitato;
@@ -179,6 +200,7 @@
     const cognome = document.getElementById('cognome').value.trim();
     const password = document.getElementById('password').value;
     const password2 = document.getElementById('password2').value;
+
     if (!nickname || !nome || !cognome || !password || !password2) {
       mostraErrore('Compila tutti i campi.');
       return;
@@ -195,29 +217,44 @@
       mostraErrore('Le password non coincidono.');
       return;
     }
+
     const btn = document.getElementById('btn-registrati');
     btn.disabled = true;
     btn.textContent = 'Registrazione in corso...';
     nascondiMessaggio();
+
+    // Crea utente in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { nickname, nome, cognome } }
     });
+
     if (authError) {
-      if (authError.message.includes('already registered')) {
-        mostraErrore('Questa email è già registrata. Prova ad accedere.');
-      } else {
-        mostraErrore('Errore durante la registrazione: ' + authError.message);
-      }
+      mostraErrore('Errore durante la registrazione: ' + authError.message);
       btn.disabled = false;
       btn.textContent = 'Entra in FantaGaffe';
       return;
     }
+
     const userId = authData.user.id;
+
+    // Inserisce nella tabella users
     const { error: userError } = await supabase
       .from('users')
-      .insert({ id: userId, email, nickname, nome, cognome, invited_by: invito.invitante_id });
+      .insert({
+        id: userId,
+        email,
+        nickname,
+        nome,
+        cognome,
+        invited_by: invito.invitante_id,
+        livello: 'membro',
+        settimane_consecutive: 0,
+        is_attivo_questa_settimana: false,
+        stagione_corrente_punti: 0
+      });
+
     if (userError) {
       if (userError.message.includes('duplicate') && userError.message.includes('nickname')) {
         mostraErrore('Questo nickname è già in uso. Scegline un altro.');
@@ -228,12 +265,22 @@
       btn.textContent = 'Entra in FantaGaffe';
       return;
     }
+
+    // Aggiorna stato invito
     await supabase
       .from('inviti')
       .update({ stato: 'accettato', accepted_at: new Date().toISOString() })
       .eq('token', tokenInvito);
-    document.getElementById('contenuto').style.display = 'none';
-    mostraSuccesso('Benvenuto in FantaGaffe! 🎉 Controlla la tua email e clicca il link per confermare il tuo account. Poi potrai accedere da qui: <a href="login.html" style="color:#e8c84a;">Accedi</a>');
+
+    // Se c'è sessione attiva, vai direttamente alla dashboard
+    if (authData.session) {
+      localStorage.setItem('sb_refresh', authData.session.refresh_token);
+      window.location.href = 'dashboard.html';
+    } else {
+      // Supabase richiede conferma email
+      document.getElementById('contenuto').style.display = 'none';
+      mostraSuccesso('Benvenuto in FantaGaffe! 🎉 Controlla la tua email e clicca il link per confermare il tuo account. Poi accedi qui: <a href="login.html" style="color:#e8c84a;">Accedi</a>');
+    }
   }
 
   function mostraErrore(msg) {
@@ -244,7 +291,7 @@
 
   function mostraSuccesso(msg) {
     const el = document.getElementById('messaggio');
-    el.textContent = msg;
+    el.innerHTML = msg;
     el.className = 'messaggio successo';
   }
 
@@ -254,3 +301,6 @@
   }
 
   caricaInvito();
+</script>
+</body>
+</html>
