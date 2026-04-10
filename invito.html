@@ -26,18 +26,8 @@
       width: 100%;
       text-align: center;
     }
-    .logo {
-      font-size: 2rem;
-      font-weight: 900;
-      color: #e8c84a;
-      letter-spacing: -1px;
-      margin-bottom: 8px;
-    }
-    .tagline {
-      font-size: 0.85rem;
-      color: #888;
-      margin-bottom: 32px;
-    }
+    .logo { font-size: 2rem; font-weight: 900; color: #e8c84a; letter-spacing: -1px; margin-bottom: 8px; }
+    .tagline { font-size: 0.85rem; color: #888; margin-bottom: 32px; }
     .invito-msg {
       background: #12122a;
       border-left: 4px solid #e8c84a;
@@ -49,14 +39,7 @@
       text-align: left;
     }
     .invito-msg strong { color: #e8c84a; }
-    label {
-      display: block;
-      text-align: left;
-      font-size: 0.8rem;
-      color: #aaa;
-      margin-bottom: 4px;
-      margin-top: 16px;
-    }
+    label { display: block; text-align: left; font-size: 0.8rem; color: #aaa; margin-bottom: 4px; margin-top: 16px; }
     input {
       width: 100%;
       padding: 12px 14px;
@@ -85,25 +68,9 @@
     }
     button:hover { background: #f0d760; }
     button:disabled { background: #555; color: #999; cursor: not-allowed; }
-    .messaggio {
-      margin-top: 20px;
-      font-size: 0.9rem;
-      padding: 12px;
-      border-radius: 8px;
-      display: none;
-    }
-    .messaggio.errore {
-      background: #2a1010;
-      border: 1px solid #a33;
-      color: #f88;
-      display: block;
-    }
-    .messaggio.successo {
-      background: #0f2a1a;
-      border: 1px solid #3a3;
-      color: #8f8;
-      display: block;
-    }
+    .messaggio { margin-top: 20px; font-size: 0.9rem; padding: 12px; border-radius: 8px; display: none; }
+    .messaggio.errore { background: #2a1010; border: 1px solid #a33; color: #f88; display: block; }
+    .messaggio.successo { background: #0f2a1a; border: 1px solid #3a3; color: #8f8; display: block; }
     .loading { color: #888; font-size: 0.9rem; margin: 20px 0; }
   </style>
 </head>
@@ -115,7 +82,7 @@
   <div id="contenuto" style="display:none">
     <div class="invito-msg" id="msg-invito"></div>
     <label>Email</label>
-    <input type="email" id="email" readonly />
+    <input type="email" id="email" placeholder="La tua email" />
     <label>Nickname</label>
     <input type="text" id="nickname" placeholder="Come vuoi essere chiamato?" maxlength="30" />
     <label>Nome</label>
@@ -136,51 +103,75 @@
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let tokenInvito = null;
-  let invito = null;
+  let invitanteId = null;
+  let flusso = null;
 
   async function caricaInvito() {
     const params = new URLSearchParams(window.location.search);
-    tokenInvito = params.get('token');
+    const token = params.get('token');
+    const ref = params.get('ref');
 
-    if (!tokenInvito) {
+    if (!token && !ref) {
       document.getElementById('stato-caricamento').style.display = 'none';
       mostraErrore('Link non valido. Chiedi un nuovo invito.');
       return;
     }
 
-    // Legge solo l'invito — senza join a users
-    const { data, error } = await supabase
-      .from('inviti')
-      .select('id, invitante_id, email_invitato, stato')
-      .eq('token', tokenInvito)
-      .single();
+    if (token) {
+      flusso = 'email';
+      tokenInvito = token;
 
-    document.getElementById('stato-caricamento').style.display = 'none';
+      const { data, error } = await supabase
+        .from('inviti')
+        .select('id, invitante_id, email_invitato, stato')
+        .eq('token', token)
+        .single();
 
-    if (error || !data) {
-      mostraErrore('Invito non trovato. Errore: ' + (error?.message || 'nessun dato'));
-      return;
+      document.getElementById('stato-caricamento').style.display = 'none';
+
+      if (error || !data) {
+        mostraErrore('Invito non trovato. Errore: ' + (error?.message || 'nessun dato'));
+        return;
+      }
+      if (data.stato === 'accettato') {
+        mostraErrore('Questo invito e\' gia\' stato usato. Ogni invito e\' valido una sola volta.');
+        return;
+      }
+      if (data.stato === 'scaduto') {
+        mostraErrore('Questo invito e\' scaduto. Chiedi un nuovo invito.');
+        return;
+      }
+
+      invitanteId = data.invitante_id;
+      const emailInput = document.getElementById('email');
+      emailInput.value = data.email_invitato;
+      emailInput.readOnly = true;
+
+    } else {
+      flusso = 'whatsapp';
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, nickname, nome')
+        .eq('invite_code', ref)
+        .single();
+
+      document.getElementById('stato-caricamento').style.display = 'none';
+
+      if (error || !data) {
+        mostraErrore('Link non valido. Chiedi un nuovo link all\'amico che ti ha invitato.');
+        return;
+      }
+
+      invitanteId = data.id;
     }
 
-    if (data.stato === 'accettato') {
-      mostraErrore('Questo invito è già stato usato. Ogni invito è valido una sola volta.');
-      return;
-    }
-
-    if (data.stato === 'scaduto') {
-      mostraErrore('Questo invito è scaduto. Chiedi un nuovo invito.');
-      return;
-    }
-
-    invito = data;
-
-    // Legge il nome dell'invitante separatamente
     let nomeInvitante = 'un amico';
-    if (data.invitante_id) {
+    if (invitanteId) {
       const { data: userData } = await supabase
         .from('users')
         .select('nickname, nome')
-        .eq('id', data.invitante_id)
+        .eq('id', invitanteId)
         .single();
       if (userData) {
         nomeInvitante = userData.nickname || userData.nome || 'un amico';
@@ -188,8 +179,7 @@
     }
 
     document.getElementById('msg-invito').innerHTML =
-      `Sei stato invitato da <strong>${nomeInvitante}</strong> a entrare in FantaGaffe!`;
-    document.getElementById('email').value = data.email_invitato;
+      'Sei stato invitato da <strong>' + nomeInvitante + '</strong> a entrare in FantaGaffe!';
     document.getElementById('contenuto').style.display = 'block';
   }
 
@@ -201,29 +191,19 @@
     const password = document.getElementById('password').value;
     const password2 = document.getElementById('password2').value;
 
-    if (!nickname || !nome || !cognome || !password || !password2) {
-      mostraErrore('Compila tutti i campi.');
-      return;
-    }
-    if (nickname.length < 3) {
-      mostraErrore('Il nickname deve avere almeno 3 caratteri.');
-      return;
-    }
-    if (password.length < 8) {
-      mostraErrore('La password deve avere almeno 8 caratteri.');
-      return;
-    }
-    if (password !== password2) {
-      mostraErrore('Le password non coincidono.');
-      return;
-    }
+    if (!email) { mostraErrore('Inserisci la tua email.'); return; }
+    if (!email.includes('@')) { mostraErrore('Email non valida.'); return; }
+    if (!nickname) { mostraErrore('Inserisci un nickname.'); return; }
+    if (nickname.length < 3) { mostraErrore('Il nickname deve avere almeno 3 caratteri.'); return; }
+    if (!nome || !cognome) { mostraErrore('Inserisci nome e cognome.'); return; }
+    if (password.length < 8) { mostraErrore('La password deve avere almeno 8 caratteri.'); return; }
+    if (password !== password2) { mostraErrore('Le password non coincidono.'); return; }
 
     const btn = document.getElementById('btn-registrati');
     btn.disabled = true;
     btn.textContent = 'Registrazione in corso...';
     nascondiMessaggio();
 
-    // Crea utente in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -239,16 +219,15 @@
 
     const userId = authData.user.id;
 
-    // Inserisce nella tabella users
     const { error: userError } = await supabase
       .from('users')
       .insert({
         id: userId,
-        email,
-        nickname,
-        nome,
-        cognome,
-        invited_by: invito.invitante_id,
+        email: email,
+        nickname: nickname,
+        nome: nome,
+        cognome: cognome,
+        invited_by: invitanteId,
         livello: 'membro',
         settimane_consecutive: 0,
         is_attivo_questa_settimana: false,
@@ -257,7 +236,7 @@
 
     if (userError) {
       if (userError.message.includes('duplicate') && userError.message.includes('nickname')) {
-        mostraErrore('Questo nickname è già in uso. Scegline un altro.');
+        mostraErrore('Questo nickname e\' gia\' in uso. Scegline un altro.');
       } else {
         mostraErrore('Errore nel salvataggio del profilo: ' + userError.message);
       }
@@ -266,20 +245,19 @@
       return;
     }
 
-    // Aggiorna stato invito
-    await supabase
-      .from('inviti')
-      .update({ stato: 'accettato', accepted_at: new Date().toISOString() })
-      .eq('token', tokenInvito);
+    if (flusso === 'email' && tokenInvito) {
+      await supabase
+        .from('inviti')
+        .update({ stato: 'accettato', accepted_at: new Date().toISOString() })
+        .eq('token', tokenInvito);
+    }
 
-    // Se c'è sessione attiva, vai direttamente alla dashboard
     if (authData.session) {
       localStorage.setItem('sb_refresh', authData.session.refresh_token);
       window.location.href = 'dashboard.html';
     } else {
-      // Supabase richiede conferma email
       document.getElementById('contenuto').style.display = 'none';
-      mostraSuccesso('Benvenuto in FantaGaffe! 🎉 Controlla la tua email e clicca il link per confermare il tuo account. Poi accedi qui: <a href="login.html" style="color:#e8c84a;">Accedi</a>');
+      mostraSuccesso('Benvenuto in FantaGaffe! Controlla la tua email e clicca il link per confermare il tuo account. Poi accedi qui: <a href="login.html" style="color:#e8c84a;">Accedi</a>');
     }
   }
 
