@@ -118,6 +118,7 @@
     }
 
     if (token) {
+      // ── FLUSSO EMAIL (non toccare) ──────────────────────────────────────
       flusso = 'email';
       tokenInvito = token;
 
@@ -134,11 +135,11 @@
         return;
       }
       if (data.stato === 'accettato') {
-        mostraErrore('Questo invito e\' gia\' stato usato. Ogni invito e\' valido una sola volta.');
+        mostraErrore('Questo invito è già stato usato. Ogni invito è valido una sola volta.');
         return;
       }
       if (data.stato === 'scaduto') {
-        mostraErrore('Questo invito e\' scaduto. Chiedi un nuovo invito.');
+        mostraErrore('Questo invito è scaduto. Chiedi un nuovo invito.');
         return;
       }
 
@@ -147,14 +148,28 @@
       emailInput.value = data.email_invitato;
       emailInput.readOnly = true;
 
+      // Recupera il nome dell'invitante per il flusso email
+      let nomeInvitanteEmail = 'un amico';
+      if (invitanteId) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('nickname, nome')
+          .eq('id', invitanteId)
+          .single();
+        if (userData) {
+          nomeInvitanteEmail = userData.nickname || userData.nome || 'un amico';
+        }
+      }
+      document.getElementById('msg-invito').innerHTML =
+        'Sei stato invitato da <strong>' + nomeInvitanteEmail + '</strong> a entrare in FantaGaffe!';
+      document.getElementById('contenuto').style.display = 'block';
+
     } else {
+      // ── FLUSSO WHATSAPP ─────────────────────────────────────────────────
       flusso = 'whatsapp';
 
       const { data, error } = await supabase
-        .from('users')
-        .select('id, nickname, nome')
-        .eq('invite_code', ref)
-        .single();
+        .rpc('get_invitante_by_code', { code: ref });
 
       document.getElementById('stato-caricamento').style.display = 'none';
 
@@ -164,23 +179,11 @@
       }
 
       invitanteId = data.id;
+      const nomeInvitante = data.nickname || data.nome || 'un amico';
+      document.getElementById('msg-invito').innerHTML =
+        'Sei stato invitato da <strong>' + nomeInvitante + '</strong> a entrare in FantaGaffe!';
+      document.getElementById('contenuto').style.display = 'block';
     }
-
-    let nomeInvitante = 'un amico';
-    if (invitanteId) {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('nickname, nome')
-        .eq('id', invitanteId)
-        .single();
-      if (userData) {
-        nomeInvitante = userData.nickname || userData.nome || 'un amico';
-      }
-    }
-
-    document.getElementById('msg-invito').innerHTML =
-      'Sei stato invitato da <strong>' + nomeInvitante + '</strong> a entrare in FantaGaffe!';
-    document.getElementById('contenuto').style.display = 'block';
   }
 
   async function registrati() {
@@ -236,7 +239,7 @@
 
     if (userError) {
       if (userError.message.includes('duplicate') && userError.message.includes('nickname')) {
-        mostraErrore('Questo nickname e\' gia\' in uso. Scegline un altro.');
+        mostraErrore('Questo nickname è già in uso. Scegline un altro.');
       } else {
         mostraErrore('Errore nel salvataggio del profilo: ' + userError.message);
       }
