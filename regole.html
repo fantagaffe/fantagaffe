@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Regole — FantaGaffe</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FantaGaffe" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --verde: #009246;
+      --rosso: #ce2b37;
+      --bianco: #f5f5f0;
+      --oro: #f5c518;
+      --bg: #0a0a0f;
+      --bg2: #13131f;
+      --bg3: #1c1c2e;
+      --bg4: #252538;
+      --border: rgba(255,255,255,0.08);
+      --text: #e8e8f0;
+      --text2: #8888aa;
+      --text3: #555570;
+      --nav-h: 68px;
+      --header-h: 60px;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+    .header {
+      position: fixed;
+      top: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      height: var(--header-h);
+      background: rgba(10,10,15,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 100;
+    }
+    .header-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--verde) 0%, var(--bianco) 50%, var(--rosso) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .avatar-sm {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--verde), var(--rosso));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #fff;
+      border: 2px solid var(--border);
+      cursor: pointer;
+    }
+    .main {
+      padding-top: calc(var(--header-h) + 16px);
+      padding-bottom: calc(var(--nav-h) + 24px);
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+    .page-hero {
+      text-align: center;
+      padding: 12px 0 20px;
+    }
+    .page-hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--verde) 0%, var(--bianco) 50%, var(--rosso) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+    .page-hero p { font-size: 0.82rem; color: var(--text2); }
+
+    /* CERCA */
+    .search-box { position: relative; margin-bottom: 20px; }
+    .search-box input {
+      width: 100%;
+      padding: 13px 16px 13px 42px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-box input:focus { border-color: rgba(245,197,24,0.4); }
+    .search-box input::placeholder { color: var(--text3); }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none; }
+    .no-results { display: none; text-align: center; padding: 40px 20px; color: var(--text3); font-size: 0.85rem; }
+
+    /* ACCORDION */
+    .accordion-item {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .accordion-item.hidden { display: none; }
+    .accordion-item.aperto { border-color: rgba(245,197,24,0.2); }
+    .accordion-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      color: var(--text);
+    }
+    .acc-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .tag-basi    { background: rgba(74,144,217,0.15); color: #4a90d9; }
+    .tag-squadra { background: rgba(245,197,24,0.12); color: var(--oro); }
+    .tag-punti   { background: rgba(0,146,70,0.15); color: #4dbb84; }
+    .tag-rete    { background: rgba(155,89,182,0.2); color: #bb88dd; }
+    .tag-badge   { background: rgba(206,43,55,0.15); color: #e87070; }
+    .tag-stagione{ background: rgba(230,126,34,0.15); color: #e8963a; }
+    .acc-titolo { flex: 1; font-size: 0.95rem; font-weight: 600; }
+    .acc-freccia { font-size: 0.75rem; color: var(--text3); transition: transform 0.2s; flex-shrink: 0; }
+    .accordion-item.aperto .acc-freccia { transform: rotate(180deg); }
+    .accordion-body { display: none; padding: 0 16px 16px; }
+    .accordion-item.aperto .accordion-body { display: block; }
+
+    /* CONTENUTO */
+    .acc-sezione { margin-bottom: 16px; }
+    .acc-sezione:last-child { margin-bottom: 0; }
+    .acc-domanda {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text3);
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 7px;
+    }
+    .acc-risposta { font-size: 0.88rem; color: var(--text2); line-height: 1.65; }
+    .acc-risposta strong { color: var(--text); }
+
+    /* TABELLA PUNTI */
+    .punti-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.82rem; }
+    .punti-table th {
+      text-align: left;
+      padding: 8px 10px;
+      color: var(--text3);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--border);
+    }
+    .punti-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; }
+    .punti-table tr:last-child td { border-bottom: none; }
+    .pts-pos { color: #4dbb84; font-family: 'DM Mono', monospace; font-weight: 700; white-space: nowrap; }
+    .pts-neg { color: #e87070; font-family: 'DM Mono', monospace; font-weight: 700; white-space: nowrap; }
+
+    /* NOTA */
+    .nota {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: var(--bg3);
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      color: var(--text3);
+      line-height: 1.5;
+    }
+
+    /* HIGHLIGHT */
+    .highlight {
+      background: rgba(245,197,24,0.05);
+      border-left: 3px solid var(--oro);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 12px 14px;
+      margin: 10px 0;
+      font-size: 0.84rem;
+      color: var(--text2);
+      line-height: 1.65;
+    }
+    .highlight strong { color: var(--oro); }
+    .highlight-verde {
+      background: rgba(0,146,70,0.08);
+      border-left: 3px solid var(--verde);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 12px 14px;
+      margin: 10px 0;
+      font-size: 0.84rem;
+      color: var(--text2);
+      line-height: 1.8;
+    }
+    .highlight-verde strong { color: #4dbb84; }
+
+    /* GERARCHIA */
+    .gerarchia { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .gerar-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg3);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    .gerar-icona { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+    .gerar-titolo { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .gerar-desc { font-size: 0.78rem; color: var(--text2); line-height: 1.5; }
+
+    /* BADGE */
+    .badge-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .badge-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg3);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    .badge-emoji { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+    .badge-nome { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .badge-desc { font-size: 0.78rem; color: var(--text2); line-height: 1.5; }
+
+    /* BOTTOM NAV */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      height: var(--nav-h);
+      background: rgba(10,10,15,0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: stretch;
+      z-index: 100;
+    }
+    .nav-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      border: none;
+      background: transparent;
+      color: var(--text3);
+      text-decoration: none;
+    }
+    .nav-tab.attiva { color: var(--bianco); }
+    .nav-tab.attiva .nav-icon { color: var(--oro); }
+    .nav-icon { font-size: 1.3rem; line-height: 1; }
+    .nav-label { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'DM Mono', monospace; }
+
+    mark { background: rgba(245,197,24,0.3); color: var(--text); border-radius: 2px; padding: 0 2px; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-logo">FantaGaffe</div>
+  <div class="avatar-sm" id="avatar-header" onclick="window.location.href='dashboard.html'">?</div>
+</header>
+
+<main class="main">
+
+  <div class="page-hero">
+    <h1>Regolamento</h1>
+    <p>Tutto quello che devi sapere per giocare</p>
+  </div>
+
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="input-cerca" placeholder="Cerca: badge, lire, brigata, punti..." oninput="cercaRegole()" />
+  </div>
+  <div class="no-results" id="no-results">Nessun risultato per "<span id="no-results-query"></span>"</div>
+
+  <!-- LE BASI -->
+  <div class="accordion-item" data-keywords="cos è fantagaffe come funziona quando si gioca sabato domenica lunedi venerdi iscrivo invito registrazione">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <span class="acc-tag tag-basi">Le basi</span>
+      <span class="acc-titolo">Come funziona FantaGaffe</span>
+      <span class="acc-freccia">▼</span>
+    </button>
+    <div class="accordion-body">
+      <div class="acc-sezione">
+        <div class="acc-domanda">Cos'è FantaGaffe?</div>
+        <div class="acc-risposta">FantaGaffe è un fantasy game sulla politica italiana. Ogni settimana costruisci una squadra di 8 politici italiani e guadagni punti ogni volta che uno di loro fa notizia — una gaffe, un cambio di partito, una smentita, una dimissione. Chi segue meglio la scena politica sale in classifica.</div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Quando si gioca?</div>
+        <div class="acc-risposta">
+          Il turno si apre ogni <strong>sabato mattina</strong>. Nel weekend (sabato e domenica) scegli la tua squadra di politici per la settimana. Dal <strong>lunedì al venerdì</strong> si accumulano punti in base agli eventi reali. I punti vengono calcolati ogni <strong>venerdì a mezzanotte</strong>. Poi si ricomincia.
+        </div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Come mi iscrivo?</div>
+        <div class="acc-risposta">FantaGaffe è solo su invito. Per entrare devi ricevere un link da qualcuno già iscritto. Una volta cliccato il link, completi la registrazione in pochi secondi: nickname, nome, cognome, email e password. Il tuo link personale per invitare altri lo trovi nella sezione <strong>Invita</strong> della dashboard.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SQUADRA -->
+  <div class="accordion-item" data-keywords="squadra politici lire budget capitano rosa bloccata mercato scegliere selezionare cambiare modificare inattivo weekend sabato domenica">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <span class="acc-tag tag-squadra">Squadra</span>
+      <span class="acc-titolo">Scegliere la squadra</span>
+      <span class="acc-freccia">▼</span>
+    </button>
+    <div class="accordion-body">
+      <div class="acc-sezione">
+        <div class="acc-domanda">Quanti politici scelgo?</div>
+        <div class="acc-risposta">Ogni settimana costruisci una rosa di <strong>8 politici</strong>. Tra questi, nomini uno <strong>Capitano</strong> — i suoi punti valgono doppio quella settimana. Scegli bene: chi pensi farà più notizia? Il costo dei politici è espresso in <strong>Lire</strong> e può variare settimana per settimana.</div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Cosa sono le Lire?</div>
+        <div class="acc-risposta">Ogni settimana hai <strong>100 Lire</strong> da spendere per costruire la rosa. Ogni politico ha un costo stabilito dallo staff, che può cambiare di settimana in settimana. Le Lire non si accumulano — ogni sabato ricominciano da 100.</div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Quando posso scegliere o cambiare la squadra?</div>
+        <div class="acc-risposta">Puoi scegliere e modificare la rosa solo nel <strong>weekend (sabato e domenica)</strong>. Dal lunedì al venerdì la squadra è bloccata — nessuna modifica possibile. La settimana di gioco va dal lunedì al venerdì.</div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Cosa succede se non scelgo la squadra nel weekend?</div>
+        <div class="acc-risposta">Se non selezioni la squadra entro domenica, quella settimana sei considerato <strong>inattivo</strong>. Non appari in classifica e non guadagni Punti Gioco. Se sei Capitano o Ammiraglio, quella settimana non ricevi nemmeno i Punti Rete dalla tua brigata o flotta. La tua brigata rimane invariata — non perdi il posto. I punti stagione accumulati nelle settimane precedenti rimangono intatti.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PUNTI -->
+  <div class="accordion-item" data-keywords="punti come si guadagnano eventi talk show dimissioni gaffe smentita partito giudizio post cancellato corte costituzionale sparisce media fact-checker staff approvati segnalare nuovi eventi">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <span class="acc-tag tag-punti">Punti</span>
+      <span class="acc-titolo">Come si guadagnano i punti</span>
+      <span class="acc-freccia">▼</span>
+    </button>
+    <div class="accordion-body">
+      <div class="acc-sezione">
+        <div class="acc-domanda">Come funzionano i Punti Gioco?</div>
+        <div class="acc-risposta">I <strong>Punti Gioco</strong> dipendono solo dai politici che hai scelto nella tua rosa. Ogni evento reale e verificabile genera punti. Il Capitano che nomini vale doppio. La classifica pubblica si basa esclusivamente sui Punti Gioco — non sul numero di invitati o sulla rete.</div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Tabella eventi e punti</div>
+        <table class="punti-table">
+          <thead><tr><th>Evento</th><th>Punti</th></tr></thead>
+          <tbody>
+            <tr><td>Appare in un talk show</td><td class="pts-pos">+5</td></tr>
+            <tr><td>Appare in 2 o più talk show nella settimana</td><td class="pts-pos">+4 aggiuntivi</td></tr>
+            <tr><td>Vota in modo difforme dal suo gruppo parlamentare</td><td class="pts-pos">+15</td></tr>
+            <tr><td>Si dimette o viene rimosso da un incarico</td><td class="pts-pos">+20</td></tr>
+            <tr><td>Viene smentito da un fact-checker entro 48h</td><td class="pts-pos">+8</td></tr>
+            <tr><td>Si scusa pubblicamente in modo esplicito e verificato</td><td class="pts-pos">+18</td></tr>
+            <tr><td>Cambia partito o gruppo parlamentare</td><td class="pts-pos">+12</td></tr>
+            <tr><td>Riceve voto di sfiducia individuale</td><td class="pts-pos">+15</td></tr>
+            <tr><td>Il governo cade (voto di sfiducia al governo)</td><td class="pts-pos">+15</td></tr>
+            <tr><td>Viene citato o rinviato in giudizio</td><td class="pts-pos">+10</td></tr>
+            <tr><td>Pubblica un post poi cancellato (screenshot verificabile)</td><td class="pts-pos">+6</td></tr>
+            <tr><td>Viene eletto o nominato a nuovo incarico ufficiale</td><td class="pts-pos">+8</td></tr>
+            <tr><td>Provvedimento bocciato dalla Corte Costituzionale</td><td class="pts-pos">+12</td></tr>
+            <tr><td>Sparisce dai media per una settimana intera</td><td class="pts-neg">−3</td></tr>
+            <tr><td>Smentisce se stesso entro 48h con fonte primaria</td><td class="pts-neg">−6</td></tr>
+          </tbody>
+        </table>
+        <div class="nota">La lista degli eventi può crescere nel tempo. Se hai un'idea per un nuovo tipo di evento, puoi proporla — lo staff valuterà se aggiungerla.</div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Chi verifica gli eventi?</div>
+        <div class="acc-risposta">Tutti gli eventi sono verificati e approvati dallo <strong>staff di FantaGaffe</strong> prima di generare punti. Le fonti accettate sono siti istituzionali ufficiali, agenzie di stampa nazionali e fact-checker riconosciuti (a titolo di esempio: parlamento.it, ANSA, Pagella Politica). Zero eventi soggettivi. Presto potrai anche tu <strong>segnalare un evento</strong> direttamente dalla dashboard.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLASSIFICA -->
+  <div class="accordion-item" data-keywords="classifica posizione top 10 stagione inattivo scatola nera altri giocatori">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <span class="acc-tag tag-basi">Classifica</span>
+      <span class="acc-titolo">La classifica</span>
+      <span class="acc-freccia">▼</span>
+    </button>
+    <div class="accordion-body">
+      <div class="acc-sezione">
+        <div class="acc-domanda">Cosa vedo in classifica?</div>
+        <div class="acc-risposta">La classifica mostra i <strong>top 10 assoluti</strong> della stagione, più le 2 posizioni sopra e le 2 sotto la tua. Così sai sempre quanto sei vicino a scavalcare chi ti precede.</div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Vedo i politici degli altri?</div>
+        <div class="acc-risposta">No. Le squadre degli altri giocatori sono una <strong>scatola nera</strong> — non puoi vedere i politici che hanno scelto, e loro non vedono i tuoi. Solo il punteggio è pubblico.</div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Cosa succede se sono inattivo?</div>
+        <div class="acc-risposta">Chi non seleziona la squadra nel weekend non appare in classifica quella settimana e non guadagna punti. I punti stagione accumulati rimangono intatti. Torni automaticamente in classifica quando selezioni la squadra il weekend successivo.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RETE -->
+  <div class="accordion-item" data-keywords="rete brigata capitano ammiraglio membro punti rete invitato presentato gerarchia flotta 50 25 percento presentante inattivo">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <span class="acc-tag tag-rete">Rete</span>
+      <span class="acc-titolo">Punti Rete e gerarchia</span>
+      <span class="acc-freccia">▼</span>
+    </button>
+    <div class="accordion-body">
+      <div class="acc-sezione">
+        <div class="acc-domanda">Cosa sono i Punti Rete?</div>
+        <div class="acc-risposta">I <strong>Punti Rete</strong> sono separati dai Punti Gioco e non entrano mai in classifica. Premiano chi ha costruito una rete di giocatori attivi. Chi gioca bene fa punti con la squadra — chi porta giocatori validi guadagna anche attraverso di loro.</div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">I tre livelli</div>
+        <div class="gerarchia">
+          <div class="gerar-row">
+            <div class="gerar-icona">👤</div>
+            <div>
+              <div class="gerar-titolo">Membro</div>
+              <div class="gerar-desc">Entra su invito. Gioca con la sua squadra. Può invitare altri. Chi ti ha invitato è il tuo <strong>presentante</strong> — questo legame è permanente per sempre.</div>
+            </div>
+          </div>
+          <div class="gerar-row">
+            <div class="gerar-icona">⚓</div>
+            <div>
+              <div class="gerar-titolo">Capitano</div>
+              <div class="gerar-desc">Dopo 2 settimane di attività e almeno 3 invitati attivi, puoi formare una brigata con 3–5 dei tuoi invitati. Ogni settimana che sei attivo (hai selezionato la squadra), ricevi il <strong>50% dei Punti Gioco</strong> di ogni membro della tua brigata come Punti Rete.</div>
+            </div>
+          </div>
+          <div class="gerar-row">
+            <div class="gerar-icona">🚢</div>
+            <div>
+              <div class="gerar-titolo">Ammiraglio</div>
+              <div class="gerar-desc">Diventi Ammiraglio quando uno dei tuoi invitati diretti forma una nuova brigata. Ogni nuova brigata creata dai tuoi invitati si aggiunge alla tua flotta. Ogni settimana che sei attivo, ricevi il <strong>25% dei Punti Gioco</strong> da tutte le brigate della tua flotta.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Come funziona la catena?</div>
+        <div class="acc-risposta">Il legame tra chi ha invitato chi è <strong>permanente e immutabile</strong> — non cambia mai, anche dopo anni. Determina il flusso dei Punti Rete per sempre.</div>
+        <div class="highlight">
+          <strong>Esempio:</strong> Mario è stato presentato da Gianni ed è membro della brigata di Paolo. Paolo (Capitano) riceve il 50% dei punti di Mario ogni settimana. Giuseppe (Ammiraglio di Paolo) riceve il 25%. Quando Mario forma la sua brigata, torna sotto la flotta di Gianni — che diventa suo Ammiraglio.
+        </div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Cosa succede se sono inattivo come Capitano o Ammiraglio?</div>
+        <div class="acc-risposta">L'inattività riguarda il <strong>giocatore</strong>, non solo la squadra. Se non selezioni la squadra nel weekend, sei inattivo per tutta la settimana. Un Capitano inattivo non riceve il 50% dai suoi membri. Un Ammiraglio inattivo non riceve il 25% dalla sua flotta. I punti di quella settimana sono persi — ma nessuna penale aggiuntiva. Torni a ricevere Punti Rete appena torni attivo.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BADGE -->
+  <div class="accordion-item" data-keywords="badge riconoscimenti fondatori padre repubblica battesimo cecchino fenomeno veterano legislatura primo contatto connettore talent scout architetto ambasciatore fulmine solitario controcorrente presidente">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <span class="acc-tag tag-badge">Badge</span>
+      <span class="acc-titolo">Badge e riconoscimenti</span>
+      <span class="acc-freccia">▼</span>
+    </button>
+    <div class="accordion-body">
+      <div class="acc-sezione">
+        <div class="acc-domanda">Badge Fondatori</div>
+        <div class="badge-grid">
+          <div class="badge-item">
+            <div class="badge-emoji">🏛️</div>
+            <div><div class="badge-nome">Padre della Repubblica</div><div class="badge-desc">Assegnato ai primi 30 iscritti. Non ottenibile mai più dopo il lancio. Documento storico del gioco.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Badge di Gioco</div>
+        <div class="badge-grid">
+          <div class="badge-item">
+            <div class="badge-emoji">🔥</div>
+            <div><div class="badge-nome">Battesimo del fuoco</div><div class="badge-desc">Completi la tua prima selezione della squadra.</div></div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-emoji">🎯</div>
+            <div><div class="badge-nome">Cecchino</div><div class="badge-desc">Almeno 3 dei tuoi politici segnano punti nella stessa settimana.</div></div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-emoji">⭐</div>
+            <div><div class="badge-nome">Fenomeno</div><div class="badge-desc">Entri per la prima volta nella top 10 della classifica assoluta settimanale.</div></div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-emoji">🛡️</div>
+            <div><div class="badge-nome">Veterano</div><div class="badge-desc">Giochi per 4 settimane consecutive senza saltare un turno.</div></div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-emoji">🏛️</div>
+            <div><div class="badge-nome">Legislatura</div><div class="badge-desc">Giochi per 12 settimane consecutive senza mai saltare.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Badge di Rete</div>
+        <div class="badge-grid">
+          <div class="badge-item">
+            <div class="badge-emoji">📨</div>
+            <div><div class="badge-nome">Primo contatto</div><div class="badge-desc">Il tuo primo invitato completa la registrazione e diventa attivo.</div></div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-emoji">🔗</div>
+            <div><div class="badge-nome">Connettore</div><div class="badge-desc">Hai 5 invitati attivi nella tua rete a qualsiasi livello.</div></div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-emoji">🔭</div>
+            <div><div class="badge-nome">Talent scout</div><div class="badge-desc">Un tuo invitato diretto diventa Capitano.</div></div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-emoji">🏗️</div>
+            <div><div class="badge-nome">Architetto</div><div class="badge-desc">Hai almeno 3 brigate nella tua flotta come Ammiraglio.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Badge Sorpresa</div>
+        <div class="badge-grid">
+          <div class="badge-item">
+            <div class="badge-emoji">⚡</div>
+            <div><div class="badge-nome">Fulmine</div><div class="badge-desc">Sei il primo della tua brigata a scegliere la squadra nel weekend. Un Fulmine per brigata, ogni settimana.</div></div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-emoji">🏝️</div>
+            <div><div class="badge-nome">Solitario</div><div class="badge-desc">Sei l'unico giocatore ad aver scelto un certo politico, e quel politico segna punti quella settimana. Il badge più raro del gioco.</div></div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-emoji">🌊</div>
+            <div><div class="badge-nome">Controcorrente</div><div class="badge-desc">Scegli un politico che meno del 5% dei giocatori ha in squadra, e lui finisce tra i primi 3 per punteggio quella settimana.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Badge Speciali</div>
+        <div class="badge-grid">
+          <div class="badge-item">
+            <div class="badge-emoji">🌍</div>
+            <div><div class="badge-nome">Ambasciatore</div><div class="badge-desc">Massimo 10 in tutta la piattaforma, per sempre. Assegnato dallo staff a chi ha contribuito in modo eccezionale alla community.</div></div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-emoji">🏆</div>
+            <div><div class="badge-nome">Presidente della Repubblica</div><div class="badge-desc">Vinci una stagione. Il massimo riconoscimento del gioco — non ottenibile in nessun altro modo.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAGIONI -->
+  <div class="accordion-item" data-keywords="stagione quando finisce premio vincitore hall of fame newsletter durata parlamento punti azzerano">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <span class="acc-tag tag-stagione">Stagione</span>
+      <span class="acc-titolo">Stagioni e premi</span>
+      <span class="acc-freccia">▼</span>
+    </button>
+    <div class="accordion-body">
+      <div class="acc-sezione">
+        <div class="acc-domanda">Quanto dura una stagione?</div>
+        <div class="acc-risposta">La stagione segue il <strong>calendario parlamentare italiano</strong>. Il parlamento chiude due volte l'anno — estate (luglio/agosto) e natale (dicembre). Ci sono quindi <strong>2 stagioni all'anno</strong>. La stagione finisce alla chiusura del parlamento e riparte alla riapertura.</div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Cosa vince chi arriva primo?</div>
+        <div class="highlight-verde">
+          <strong>Badge "Presidente della Repubblica"</strong> — permanente sul profilo, non ottenibile in nessun altro modo.<br><br>
+          <strong>Hall of Fame</strong> — sezione pubblica con nickname, punteggio e stagione vinta. Memoria storica permanente.<br><br>
+          <strong>Menzione nella newsletter</strong> — annuncio via email a tutta la community.<br><br>
+          <strong>Diritto di nominare un politico</strong> — puoi suggerire l'inserimento di un nuovo personaggio nel roster della stagione successiva, soggetto ad approvazione dello staff.
+        </div>
+      </div>
+      <div class="acc-sezione">
+        <div class="acc-domanda">Cosa succede ai punti a fine stagione?</div>
+        <div class="acc-risposta">I Punti Gioco si azzerano a ogni nuova stagione — si riparte da zero. I badge conquistati rimangono per sempre sul profilo.</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <a class="nav-tab" href="dashboard.html"><span class="nav-icon">🏆</span><span class="nav-label">Classifica</span></a>
+  <a class="nav-tab" href="dashboard.html"><span class="nav-icon">🎯</span><span class="nav-label">Squadra</span></a>
+  <a class="nav-tab" href="dashboard.html"><span class="nav-icon">⚡</span><span class="nav-label">Eventi</span></a>
+  <a class="nav-tab" href="dashboard.html"><span class="nav-icon">⚓</span><span class="nav-label">Brigate</span></a>
+  <a class="nav-tab" href="dashboard.html"><span class="nav-icon">✉️</span><span class="nav-label">Invita</span></a>
+  <a class="nav-tab attiva" href="regole.html"><span class="nav-icon">📖</span><span class="nav-label">Regole</span></a>
+</nav>
+
+<script>
+  const SUPABASE_URL = 'https://shkrdjqqeradgsucrfib.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa3JkanFxZXJhZGdzdWNyZmliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNDE2NTAsImV4cCI6MjA5MDkxNzY1MH0.wxfwYednaNxhdpDLKZWuvrTLIt8clVHvmnhgTj8cqtA';
+
+  async function initAvatar() {
+    try {
+      const rt = localStorage.getItem('sb_refresh');
+      if (!rt) return;
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: rt })
+      });
+      const data = await res.json();
+      if (!data.access_token) return;
+      localStorage.setItem('sb_refresh', data.refresh_token);
+      const uRes = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${data.user.id}&limit=1`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${data.access_token}` }
+      });
+      const utenti = await uRes.json();
+      if (utenti[0]?.nickname) {
+        document.getElementById('avatar-header').textContent = utenti[0].nickname.substring(0, 2).toUpperCase();
+      }
+    } catch (e) {}
+  }
+  initAvatar();
+
+  function toggleAccordion(btn) {
+    const item = btn.closest('.accordion-item');
+    const eraAperto = item.classList.contains('aperto');
+    document.querySelectorAll('.accordion-item.aperto').forEach(i => i.classList.remove('aperto'));
+    if (!eraAperto) item.classList.add('aperto');
+  }
+
+  function cercaRegole() {
+    const q = document.getElementById('input-cerca').value.toLowerCase().trim();
+    const items = document.querySelectorAll('.accordion-item');
+    const noResults = document.getElementById('no-results');
+
+    document.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent)));
+
+    if (!q) {
+      items.forEach(i => { i.classList.remove('hidden'); i.classList.remove('aperto'); });
+      noResults.style.display = 'none';
+      return;
+    }
+
+    let trovati = 0;
+    items.forEach(item => {
+      const match = (item.dataset.keywords || '').toLowerCase().includes(q) || item.textContent.toLowerCase().includes(q);
+      if (match) {
+        item.classList.remove('hidden');
+        item.classList.add('aperto');
+        trovati++;
+        highlightTesto(item, q);
+      } else {
+        item.classList.add('hidden');
+        item.classList.remove('aperto');
+      }
+    });
+
+    if (trovati === 0) {
+      noResults.style.display = 'block';
+      document.getElementById('no-results-query').textContent = q;
+    } else {
+      noResults.style.display = 'none';
+    }
+  }
+
+  function highlightTesto(el, q) {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const nodi = [];
+    let node;
+    while (node = walker.nextNode()) nodi.push(node);
+    nodi.forEach(nodo => {
+      const idx = nodo.textContent.toLowerCase().indexOf(q);
+      if (idx === -1 || nodo.parentNode.tagName === 'SCRIPT') return;
+      const span = document.createElement('span');
+      span.innerHTML =
+        escHtml(nodo.textContent.substring(0, idx)) +
+        '<mark>' + escHtml(nodo.textContent.substring(idx, idx + q.length)) + '</mark>' +
+        escHtml(nodo.textContent.substring(idx + q.length));
+      nodo.parentNode.replaceChild(span, nodo);
+    });
+  }
+
+  function escHtml(t) {
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/fantagaffe/sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
