@@ -549,9 +549,7 @@
     }
 
     /* DETTAGLIO BRIGATA */
-    .dettaglio-brigata {
-      margin-top: 16px;
-    }
+    .dettaglio-brigata { margin-top: 16px; }
     .dettaglio-titolo {
       font-family: 'DM Mono', monospace;
       font-size: 0.62rem;
@@ -581,11 +579,7 @@
       border: 1px solid var(--border);
     }
     .membro-nome { flex: 1; font-size: 0.88rem; font-weight: 500; }
-    .membro-pts {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.85rem;
-      color: var(--text2);
-    }
+    .membro-pts { font-family: 'DM Mono', monospace; font-size: 0.85rem; color: var(--text2); }
 
     /* ── BOTTOM NAV ── */
     .bottom-nav {
@@ -615,13 +609,14 @@
       border: none;
       background: transparent;
       color: var(--text3);
+      text-decoration: none;
     }
     .nav-tab.attiva { color: var(--bianco); }
     .nav-tab.attiva .nav-icon { color: var(--oro); }
 
     .nav-icon { font-size: 1.3rem; line-height: 1; }
     .nav-label {
-      font-size: 0.6rem;
+      font-size: 0.55rem;
       font-weight: 600;
       letter-spacing: 0.5px;
       text-transform: uppercase;
@@ -848,10 +843,7 @@
       align-items: center;
       gap: 14px;
     }
-    .brigata-icon {
-      font-size: 2rem;
-      flex-shrink: 0;
-    }
+    .brigata-icon { font-size: 2rem; flex-shrink: 0; }
     .brigata-info-testo h3 {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.2rem;
@@ -974,11 +966,7 @@
       padding: 14px;
       margin-bottom: 16px;
     }
-    .invito-link-box p {
-      font-size: 0.78rem;
-      color: var(--text2);
-      margin-bottom: 8px;
-    }
+    .invito-link-box p { font-size: 0.78rem; color: var(--text2); margin-bottom: 8px; }
     .invito-link-text {
       font-family: 'DM Mono', monospace;
       font-size: 0.72rem;
@@ -1089,7 +1077,7 @@
   </div>
 </div>
 
-<!-- BOTTOM NAV -->
+<!-- BOTTOM NAV — 6 tab -->
 <nav class="bottom-nav">
   <button class="nav-tab attiva" onclick="mostraView('classifica', this)">
     <span class="nav-icon">🏆</span>
@@ -1111,42 +1099,25 @@
     <span class="nav-icon">✉️</span>
     <span class="nav-label">Invita</span>
   </button>
+  <a class="nav-tab" href="regole.html">
+    <span class="nav-icon">📖</span>
+    <span class="nav-label">Regole</span>
+  </a>
 </nav>
 
 <script>
-  // ─────────────────────────────────────────────
-  // CONFIG
-  // ─────────────────────────────────────────────
   const SUPABASE_URL = 'https://shkrdjqqeradgsucrfib.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa3JkanFxZXJhZGdzdWNyZmliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNDE2NTAsImV4cCI6MjA5MDkxNzY1MH0.wxfwYednaNxhdpDLKZWuvrTLIt8clVHvmnhgTj8cqtA';
 
-  // ─────────────────────────────────────────────
-  // STATO
-  // ─────────────────────────────────────────────
   let utenteCorrente = null;
   let settimanaCorrente = calcolaSabatoDiQuestaSettimana();
   let squadraCorrente = null;
   let mercatoScelti = [];
   let rosterDisponibile = [];
 
-  // ─────────────────────────────────────────────
-  // CALCOLO SETTIMANA
-  // Il gioco va da sabato a venerdì.
-  // "Questa settimana" = il sabato più recente (o oggi se è sabato).
-  // Mercato APERTO: sabato e domenica.
-  // Mercato CHIUSO (bloccato): lunedì→venerdì.
-  // ─────────────────────────────────────────────
   function calcolaSabatoDiQuestaSettimana() {
     const oggi = new Date();
-    const giorno = oggi.getDay(); // 0=dom, 1=lun, ..., 6=sab
-    // Quanti giorni fa era sabato?
-    // sab=6 → 0 giorni fa
-    // dom=0 → 1 giorno fa
-    // lun=1 → 2 giorni fa
-    // mar=2 → 3 giorni fa
-    // mer=3 → 4 giorni fa
-    // gio=4 → 5 giorni fa
-    // ven=5 → 6 giorni fa
+    const giorno = oggi.getDay();
     const giorniDaSabato = giorno === 6 ? 0 : (giorno + 1);
     const sab = new Date(oggi);
     sab.setDate(oggi.getDate() - giorniDaSabato);
@@ -1154,7 +1125,6 @@
   }
 
   function mercatoAperto() {
-    // Aperto solo sabato (6) e domenica (0)
     const giorno = new Date().getDay();
     return giorno === 0 || giorno === 6;
   }
@@ -1177,9 +1147,6 @@
     return colori[Math.abs(h) % colori.length];
   }
 
-  // ─────────────────────────────────────────────
-  // API
-  // ─────────────────────────────────────────────
   async function db(path, opts = {}) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
       headers: {
@@ -1238,35 +1205,23 @@
     return null;
   }
 
-  // ─────────────────────────────────────────────
-  // INIT
-  // ─────────────────────────────────────────────
   async function init() {
-    // Badge settimana: mostra il sabato di apertura turno
     const d = new Date(settimanaCorrente + 'T00:00:00');
     document.getElementById('badge-settimana').textContent =
       'Sett. ' + d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' });
 
     try {
       const session = await getSession();
-      if (!session) {
-        window.location.href = 'login.html';
-        return;
-      }
+      if (!session) { window.location.href = 'login.html'; return; }
       const utenti = await dbAuth(`users?id=eq.${session.user.id}&limit=1`);
       if (utenti.length) {
         utenteCorrente = utenti[0];
-        // FIX: mostra @nickname nell'header, non le iniziali
         const avatarEl = document.getElementById('avatar-header');
-        if (utenteCorrente.nickname) {
-          // Abbreviazione del nickname: prime 2 lettere
-          avatarEl.textContent = utenteCorrente.nickname.substring(0, 2).toUpperCase();
-        } else {
-          avatarEl.textContent = inizialiDa(utenteCorrente.nome, utenteCorrente.cognome);
-        }
+        avatarEl.textContent = utenteCorrente.nickname
+          ? utenteCorrente.nickname.substring(0, 2).toUpperCase()
+          : inizialiDa(utenteCorrente.nome, utenteCorrente.cognome);
       }
     } catch (e) {
-      console.log('Sessione non trovata, reindirizzo al login');
       window.location.href = 'login.html';
       return;
     }
@@ -1280,19 +1235,14 @@
     try {
       const sq = await dbAuth(`squadre?user_id=eq.${utenteCorrente.id}&settimana=eq.${settimanaCorrente}&limit=1`);
       squadraCorrente = sq.length ? sq[0] : null;
-    } catch (e) {
-      squadraCorrente = null;
-    }
+    } catch (e) { squadraCorrente = null; }
   }
 
-  // ─────────────────────────────────────────────
-  // NAVIGAZIONE
-  // ─────────────────────────────────────────────
   function mostraView(nome, btn) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('attiva'));
     document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('attiva'));
     document.getElementById('view-' + nome).classList.add('attiva');
-    btn.classList.add('attiva');
+    if (btn) btn.classList.add('attiva');
     if (nome === 'classifica') caricaClassifica();
     if (nome === 'squadra') caricaSquadra();
     if (nome === 'eventi') caricaEventi();
@@ -1300,9 +1250,6 @@
     if (nome === 'inviti') caricaInviti();
   }
 
-  // ─────────────────────────────────────────────
-  // TOAST
-  // ─────────────────────────────────────────────
   function toast(msg, tipo = '') {
     const el = document.getElementById('toast');
     el.textContent = msg;
@@ -1310,21 +1257,14 @@
     setTimeout(() => el.className = 'toast', 2800);
   }
 
-  // ─────────────────────────────────────────────
-  // CLASSIFICA
-  // ─────────────────────────────────────────────
   async function calcolaPuntiReali(politiciIds, capitanoId) {
     if (!politiciIds || !politiciIds.length) return 0;
     try {
       const eventi = await db(`eventi?approvato=eq.true&settimana=eq.${settimanaCorrente}&politico_id=in.(${politiciIds.join(',')})`);
       let tot = 0;
-      eventi.forEach(e => {
-        tot += e.politico_id === capitanoId ? e.punti * 2 : e.punti;
-      });
+      eventi.forEach(e => { tot += e.politico_id === capitanoId ? e.punti * 2 : e.punti; });
       return tot;
-    } catch (e) {
-      return 0;
-    }
+    } catch (e) { return 0; }
   }
 
   async function caricaClassifica() {
@@ -1334,78 +1274,61 @@
     contenuto.style.display = 'none';
 
     try {
-      // Prendi tutti gli utenti ordinati per punti stagione
       const tuttiUtenti = await db(`users?order=stagione_corrente_punti.desc&select=id,nickname,nome,cognome,livello,stagione_corrente_punti`);
-
-      // Prendi le squadre di questa settimana per calcolare punti live
       const squadreSettimana = await db(`squadre?settimana=eq.${settimanaCorrente}&select=user_id,politici,capitano_politico_id,punti_gioco_totali`);
       const mapSquadre = Object.fromEntries(squadreSettimana.map(s => [s.user_id, s]));
 
-      // Calcola punti live per l'utente corrente (per mostrare il totale aggiornato)
       let puntiLiveMiei = 0;
       if (utenteCorrente && mapSquadre[utenteCorrente.id]) {
         const sq = mapSquadre[utenteCorrente.id];
         puntiLiveMiei = await calcolaPuntiReali(sq.politici, sq.capitano_politico_id);
       }
 
-      // Costruisci classifica: punti stagione (dal DB) come base
-      const classificaConPunti = tuttiUtenti.map(u => ({
-        ...u,
-        puntiTotali: u.stagione_corrente_punti || 0
-      }));
-
+      const classificaConPunti = tuttiUtenti.map(u => ({ ...u, puntiTotali: u.stagione_corrente_punti || 0 }));
       const miaPos = classificaConPunti.findIndex(u => utenteCorrente && u.id === utenteCorrente.id);
 
       let html = '';
 
-      // Banner "scegli squadra" — solo se il mercato è aperto e non hai ancora scelto
       if (utenteCorrente && !squadraCorrente && mercatoAperto()) {
-        html += `
-          <div class="cta-squadra">
-            <div class="emoji">🏛️</div>
-            <h2>Scegli la tua squadra!</h2>
-            <p>Il turno è aperto. Scegli 8 politici con 100 Lire e nomina il tuo Capitano.</p>
-            <button class="btn-cta" onclick="apriMercato()">Vai al mercato →</button>
-          </div>`;
+        html += `<div class="cta-squadra">
+          <div class="emoji">🏛️</div>
+          <h2>Scegli la tua squadra!</h2>
+          <p>Il turno è aperto. Scegli 8 politici con 100 Lire e nomina il tuo Capitano.</p>
+          <button class="btn-cta" onclick="apriMercato()">Vai al mercato →</button>
+        </div>`;
       } else if (utenteCorrente && !squadraCorrente && !mercatoAperto()) {
-        // Mercato chiuso e non ha ancora la squadra (caso raro — ha saltato il weekend)
-        html += `
-          <div class="mercato-chiuso-banner">
-            <span class="icona">🔒</span>
-            <span>Il mercato era aperto sabato e domenica. Hai saltato questo turno — la selezione riapre il prossimo sabato.</span>
-          </div>`;
+        html += `<div class="mercato-chiuso-banner">
+          <span class="icona">🔒</span>
+          <span>Il mercato è chiuso. La selezione riaprirà sabato mattina.</span>
+        </div>`;
       }
 
-      // Countdown alla fine turno (prossimo venerdì)
+      // Countdown al prossimo venerdì mezzanotte
       const oggi = new Date();
       const giorno = oggi.getDay();
-      const giorniAVenRdi = giorno <= 5 ? 5 - giorno : 6; // giorni fino a venerdì
-      const venRdi = new Date(oggi);
-      venRdi.setDate(oggi.getDate() + (giorno === 5 ? 0 : giorniAVenRdi));
-      venRdi.setHours(23, 59, 0, 0);
-      const msRimasti = venRdi - new Date();
+      const giorniAVenerdi = giorno <= 5 ? 5 - giorno : 6;
+      const venerdi = new Date(oggi);
+      venerdi.setDate(oggi.getDate() + (giorno === 5 ? 0 : giorniAVenerdi));
+      venerdi.setHours(23, 59, 0, 0);
+      const msRimasti = venerdi - new Date();
       const gg = Math.floor(msRimasti / 86400000);
       const hh = Math.floor((msRimasti % 86400000) / 3600000);
       const mm = Math.floor((msRimasti % 3600000) / 60000);
       const countdownStr = gg > 0 ? `${gg}g ${hh}h` : `${hh}h ${mm}m`;
-      html += `
-        <div class="countdown-bar">
-          <span class="countdown-label">Calcolo punti tra</span>
-          <span class="countdown-time">${countdownStr}</span>
-        </div>`;
+      html += `<div class="countdown-bar">
+        <span class="countdown-label">Calcolo punti tra</span>
+        <span class="countdown-time">${countdownStr}</span>
+      </div>`;
 
-      // Hero con la tua posizione (solo se hai una squadra)
       if (utenteCorrente && squadraCorrente) {
         const posMia = miaPos >= 0 ? miaPos + 1 : '—';
-        html += `
-          <div class="classifica-hero">
-            <div class="pos-label">La tua posizione</div>
-            <div class="pos-num">${posMia}</div>
-            <div class="pts-big">${utenteCorrente.stagione_corrente_punti || 0} pts stagione</div>
-            ${puntiLiveMiei !== 0 ? `<div style="font-size:0.8rem;color:var(--text2);margin-top:4px">Questa settimana: ${puntiLiveMiei > 0 ? '+' : ''}${puntiLiveMiei} pts (in tempo reale)</div>` : ''}
-          </div>`;
+        html += `<div class="classifica-hero">
+          <div class="pos-label">La tua posizione</div>
+          <div class="pos-num">${posMia}</div>
+          <div class="pts-big">${utenteCorrente.stagione_corrente_punti || 0} pts stagione</div>
+          ${puntiLiveMiei !== 0 ? `<div style="font-size:0.8rem;color:var(--text2);margin-top:4px">Questa settimana: ${puntiLiveMiei > 0 ? '+' : ''}${puntiLiveMiei} pts (live)</div>` : ''}
+        </div>`;
 
-        // Messaggio motivazionale
         if (miaPos > 0) {
           const sopra = classificaConPunti[miaPos - 1];
           const diff = (sopra.stagione_corrente_punti || 0) - (utenteCorrente.stagione_corrente_punti || 0);
@@ -1419,7 +1342,6 @@
         }
       }
 
-      // Top 10
       const top10 = classificaConPunti.slice(0, 10);
       html += `<p class="sezione-titolo">Top 10 classifica stagione</p>`;
       html += `<div class="card" style="padding:0;overflow:hidden"><div class="rank-list">`;
@@ -1436,28 +1358,23 @@
           const [bg, fg] = coloreAvatar(u.nickname || u.nome);
           const livClasse = { membro: 'badge-membro', capitano: 'badge-capitano', ammiraglio: 'badge-ammiraglio' }[u.livello] || 'badge-membro';
           const nick = u.nickname ? `@${u.nickname}` : (u.nome || '?');
-          html += `
-            <div class="rank-row ${eTu ? 'tu' : (posClass[i] || '')}">
-              <div class="rank-pos ${i === 0 ? 'oro' : i === 1 ? 'argento' : i === 2 ? 'bronzo' : ''}">
-                ${i < 3 ? posEmoji[i] : (i + 1)}
-              </div>
-              <div class="rank-avatar" style="background:${bg};color:${fg}">${iniz}</div>
-              <div class="rank-info">
-                <div class="rank-nick ${eTu ? 'tu-label' : ''}">${nick}</div>
-                <span class="badge-liv ${livClasse}">${u.livello || 'membro'}</span>
-              </div>
-              <div class="rank-pts ${(u.puntiTotali) > 0 ? 'high' : ''}">${u.puntiTotali}</div>
-            </div>`;
+          html += `<div class="rank-row ${eTu ? 'tu' : (posClass[i] || '')}">
+            <div class="rank-pos ${i === 0 ? 'oro' : i === 1 ? 'argento' : i === 2 ? 'bronzo' : ''}">${i < 3 ? posEmoji[i] : (i + 1)}</div>
+            <div class="rank-avatar" style="background:${bg};color:${fg}">${iniz}</div>
+            <div class="rank-info">
+              <div class="rank-nick ${eTu ? 'tu-label' : ''}">${nick}</div>
+              <span class="badge-liv ${livClasse}">${u.livello || 'membro'}</span>
+            </div>
+            <div class="rank-pts ${u.puntiTotali > 0 ? 'high' : ''}">${u.puntiTotali}</div>
+          </div>`;
         });
       }
       html += `</div></div>`;
 
-      // Sezione "intorno a te" (se non sei nella top 10)
       if (utenteCorrente && miaPos >= 10) {
         const inizio = Math.max(0, miaPos - 2);
         const fine = Math.min(classificaConPunti.length, miaPos + 3);
         const intorno = classificaConPunti.slice(inizio, fine);
-
         html += `<p class="sezione-titolo" style="margin-top:16px">Intorno a te</p>`;
         html += `<div class="card" style="padding:0;overflow:hidden"><div class="rank-list">`;
         intorno.forEach((u, idx) => {
@@ -1467,16 +1384,15 @@
           const [bg, fg] = coloreAvatar(u.nickname || u.nome);
           const livClasse = { membro: 'badge-membro', capitano: 'badge-capitano', ammiraglio: 'badge-ammiraglio' }[u.livello] || 'badge-membro';
           const nick = u.nickname ? `@${u.nickname}` : (u.nome || '?');
-          html += `
-            <div class="rank-row ${eTu ? 'tu' : ''}">
-              <div class="rank-pos">${posReale}</div>
-              <div class="rank-avatar" style="background:${bg};color:${fg}">${iniz}</div>
-              <div class="rank-info">
-                <div class="rank-nick ${eTu ? 'tu-label' : ''}">${nick}</div>
-                <span class="badge-liv ${livClasse}">${u.livello || 'membro'}</span>
-              </div>
-              <div class="rank-pts ${(u.puntiTotali) > 0 ? 'high' : ''}">${u.puntiTotali}</div>
-            </div>`;
+          html += `<div class="rank-row ${eTu ? 'tu' : ''}">
+            <div class="rank-pos">${posReale}</div>
+            <div class="rank-avatar" style="background:${bg};color:${fg}">${iniz}</div>
+            <div class="rank-info">
+              <div class="rank-nick ${eTu ? 'tu-label' : ''}">${nick}</div>
+              <span class="badge-liv ${livClasse}">${u.livello || 'membro'}</span>
+            </div>
+            <div class="rank-pts ${u.puntiTotali > 0 ? 'high' : ''}">${u.puntiTotali}</div>
+          </div>`;
         });
         html += `</div></div>`;
       }
@@ -1490,9 +1406,6 @@
     }
   }
 
-  // ─────────────────────────────────────────────
-  // SQUADRA
-  // ─────────────────────────────────────────────
   async function caricaSquadra() {
     const loading = document.getElementById('loading-squadra');
     const contenuto = document.getElementById('contenuto-squadra');
@@ -1505,13 +1418,11 @@
         return;
       }
 
-      // Nessuna squadra ancora
       if (!squadraCorrente || !squadraCorrente.politici?.length) {
         loading.style.display = 'none';
         contenuto.style.display = 'block';
         if (mercatoAperto()) {
-          contenuto.innerHTML = `
-            <p class="sezione-titolo">I tuoi 8 politici questa settimana</p>
+          contenuto.innerHTML = `<p class="sezione-titolo">I tuoi 8 politici questa settimana</p>
             <div class="cta-squadra">
               <div class="emoji">🎯</div>
               <h2>Nessuna squadra ancora!</h2>
@@ -1519,8 +1430,7 @@
               <button class="btn-cta" onclick="apriMercato()">Scegli la squadra →</button>
             </div>`;
         } else {
-          contenuto.innerHTML = `
-            <p class="sezione-titolo">I tuoi 8 politici questa settimana</p>
+          contenuto.innerHTML = `<p class="sezione-titolo">I tuoi 8 politici questa settimana</p>
             <div class="mercato-chiuso-banner">
               <span class="icona">🔒</span>
               <span>Non hai selezionato la squadra questo turno. Il mercato riaprirà sabato.</span>
@@ -1529,12 +1439,10 @@
         return;
       }
 
-      // Carica i politici della squadra
       const ids = squadraCorrente.politici.join(',');
       const politici = await db(`politici?id=in.(${ids})&select=id,nome,cognome,partito,ruolo_attuale,costo_lire`);
       const mapPol = Object.fromEntries(politici.map(p => [p.id, p]));
 
-      // Carica gli eventi di questa settimana per i suoi politici
       const eventi = await db(`eventi?approvato=eq.true&settimana=eq.${settimanaCorrente}&politico_id=in.(${ids})`);
       const puntiByCap = {};
       eventi.forEach(e => {
@@ -1542,7 +1450,6 @@
         puntiByCap[e.politico_id] += e.punti;
       });
 
-      // Calcola totale
       let totale = 0;
       squadraCorrente.politici.forEach(pid => {
         const punti = puntiByCap[pid] || 0;
@@ -1552,19 +1459,16 @@
 
       let html = `<p class="sezione-titolo">I tuoi 8 politici questa settimana</p>`;
 
-      // Banner mercato aperto — puoi ancora modificare
       if (mercatoAperto()) {
-        html += `
-          <div style="background:rgba(0,146,70,0.1);border:1px solid rgba(0,146,70,0.2);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:0.82rem;color:#4dbb84">
-            <span>✏️</span>
-            <span>Il mercato è ancora aperto. <strong style="cursor:pointer;text-decoration:underline" onclick="apriMercato()">Modifica la squadra →</strong></span>
-          </div>`;
+        html += `<div style="background:rgba(0,146,70,0.1);border:1px solid rgba(0,146,70,0.2);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:0.82rem;color:#4dbb84">
+          <span>✏️</span>
+          <span>Il mercato è ancora aperto. <strong style="cursor:pointer;text-decoration:underline" onclick="apriMercato()">Modifica la squadra →</strong></span>
+        </div>`;
       } else {
-        html += `
-          <div class="mercato-chiuso-banner">
-            <span class="icona">🔒</span>
-            <span>Rosa bloccata. Nessuna modifica possibile fino a sabato.</span>
-          </div>`;
+        html += `<div class="mercato-chiuso-banner">
+          <span class="icona">🔒</span>
+          <span>Rosa bloccata. Nessuna modifica possibile fino a sabato.</span>
+        </div>`;
       }
 
       html += `<div class="totale-bar">
@@ -1582,23 +1486,17 @@
         const cls = puntiFinali > 0 ? 'positivo' : puntiFinali < 0 ? 'negativo' : 'zero';
         const ptsCls = puntiFinali > 0 ? 'pos' : puntiFinali < 0 ? 'neg' : 'zero';
         const ptsStr = puntiFinali === 0 ? '0 pts' : (puntiFinali > 0 ? '+' : '') + puntiFinali + ' pts';
-        html += `
-          <div class="politico-card ${cls} ${isCap ? 'capitano' : ''}">
-            <div class="pol-iniziali ${isCap ? 'cap' : ''}">${iniz}</div>
-            <div class="pol-info">
-              <div class="pol-nome">
-                ${p.cognome} ${p.nome.charAt(0)}.
-                ${isCap ? '<span class="cap-badge">CAPITANO ×2</span>' : ''}
-              </div>
-              <div class="pol-sub">${p.ruolo_attuale || p.partito || '—'} · ${p.costo_lire || '?'} Lire</div>
-            </div>
-            <div class="pol-pts ${ptsCls}">${ptsStr}</div>
-          </div>`;
+        html += `<div class="politico-card ${cls} ${isCap ? 'capitano' : ''}">
+          <div class="pol-iniziali ${isCap ? 'cap' : ''}">${iniz}</div>
+          <div class="pol-info">
+            <div class="pol-nome">${p.cognome} ${p.nome.charAt(0)}.${isCap ? '<span class="cap-badge">CAPITANO ×2</span>' : ''}</div>
+            <div class="pol-sub">${p.ruolo_attuale || p.partito || '—'} · ${p.costo_lire || '?'} Lire</div>
+          </div>
+          <div class="pol-pts ${ptsCls}">${ptsStr}</div>
+        </div>`;
       });
 
-      html += `<div class="nota-scatola-nera">
-        Non vedi i politici degli altri giocatori. La loro strategia è una scatola nera — così come la tua per loro.
-      </div>`;
+      html += `<div class="nota-scatola-nera">Non vedi i politici degli altri giocatori. La loro strategia è una scatola nera — così come la tua per loro.</div>`;
 
       contenuto.innerHTML = html;
       loading.style.display = 'none';
@@ -1609,9 +1507,6 @@
     }
   }
 
-  // ─────────────────────────────────────────────
-  // EVENTI
-  // ─────────────────────────────────────────────
   async function caricaEventi() {
     const loading = document.getElementById('loading-eventi');
     const contenuto = document.getElementById('contenuto-eventi');
@@ -1620,7 +1515,6 @@
 
     try {
       const eventi = await db(`eventi?approvato=eq.true&settimana=eq.${settimanaCorrente}&order=created_at.desc`);
-
       let html = `<p class="sezione-titolo">Tutti gli eventi verificati questa settimana</p>`;
 
       if (!eventi.length) {
@@ -1638,7 +1532,6 @@
       const mioCapitano = squadraCorrente?.capitano_politico_id;
 
       html += `<div class="card" style="padding:16px">`;
-
       eventi.forEach(e => {
         const pol = mapPol[e.politico_id];
         const nomePol = pol ? `${pol.cognome} ${pol.nome.charAt(0)}.` : '?';
@@ -1649,30 +1542,23 @@
         const ptsCls = ptsFinali > 0 ? 'pos' : 'neg';
 
         let tagHtml = '';
-        if (isMio && isMioCap) {
-          tagHtml = `<span class="evento-tag tag-tua-cap">nella tua squadra ×2 capitano</span>`;
-        } else if (isMio && ptsFinali < 0) {
-          tagHtml = `<span class="evento-tag tag-tua-penalita">nella tua squadra — penalità</span>`;
-        } else if (isMio) {
-          tagHtml = `<span class="evento-tag tag-tua">nella tua squadra</span>`;
-        } else {
-          tagHtml = `<span class="tag-non-tua">non in squadra</span>`;
-        }
+        if (isMio && isMioCap) tagHtml = `<span class="evento-tag tag-tua-cap">nella tua squadra ×2 capitano</span>`;
+        else if (isMio && ptsFinali < 0) tagHtml = `<span class="evento-tag tag-tua-penalita">nella tua squadra — penalità</span>`;
+        else if (isMio) tagHtml = `<span class="evento-tag tag-tua">nella tua squadra</span>`;
+        else tagHtml = `<span class="tag-non-tua">non in squadra</span>`;
 
         const label = tipoLabel(e.tipo_evento);
         const dataStr = new Date(e.settimana + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
 
-        html += `
-          <div class="evento-row">
-            <div class="evento-header">
-              <div class="evento-titolo">${nomePol} — ${label}</div>
-              <div class="evento-pts ${ptsCls}">${ptsStr}</div>
-            </div>
-            <div class="evento-meta">${dataStr}${e.fonte_url ? ` · <a href="${e.fonte_url}" target="_blank" style="color:var(--text3);font-size:0.72rem">fonte →</a>` : ''}</div>
-            ${tagHtml}
-          </div>`;
+        html += `<div class="evento-row">
+          <div class="evento-header">
+            <div class="evento-titolo">${nomePol} — ${label}</div>
+            <div class="evento-pts ${ptsCls}">${ptsStr}</div>
+          </div>
+          <div class="evento-meta">${dataStr}${e.fonte_url ? ` · <a href="${e.fonte_url}" target="_blank" style="color:var(--text3);font-size:0.72rem">fonte →</a>` : ''}</div>
+          ${tagHtml}
+        </div>`;
       });
-
       html += `</div>`;
       html += `<div class="nota-eventi">I punti sono già calcolati con il moltiplicatore Capitano ×2 per i tuoi politici.</div>`;
 
@@ -1691,7 +1577,7 @@
       talk_show_doppio: 'appare in 2+ talk show',
       voto_difforme: 'voto difforme dal gruppo',
       dimissioni: 'dimissioni o rimozione',
-      smentito_pagella: 'smentito da Pagella Politica',
+      smentito_pagella: 'smentito da fact-checker',
       scuse_pubbliche: 'scuse pubbliche',
       cambio_partito: 'cambia partito',
       voto_sfiducia: 'voto di sfiducia',
@@ -1706,9 +1592,6 @@
     return m[tipo] || tipo;
   }
 
-  // ─────────────────────────────────────────────
-  // BRIGATE
-  // ─────────────────────────────────────────────
   async function caricaBrigate() {
     const loading = document.getElementById('loading-brigate');
     const contenuto = document.getElementById('contenuto-brigate');
@@ -1770,25 +1653,23 @@
           const capNome = cap ? (cap.nickname ? `@${cap.nickname}` : `${cap.nome} ${cap.cognome?.charAt(0)}.`) : '?';
           const nMembri = membriBrigata[b.id]?.length || 0;
           const pts = puntiBrigata[b.id] || 0;
-          html += `
-            <div class="brigata-row ${isMia ? 'la-tua' : ''}">
-              <div class="brig-pos">${i + 1}</div>
-              <div class="brig-info">
-                <div class="brig-nome">${b.nome}${isMia ? ' <span style="font-size:0.7rem;color:#4a90d9">(tu)</span>' : ''}</div>
-                <div class="brig-sub">Cap: ${capNome} · ${nMembri} membri</div>
-              </div>
-              <div class="brig-right">
-                <div class="brig-pts ${isMia ? 'la-tua-c' : ''}">${pts} pts</div>
-                <span class="brig-tag ${isMia ? 'tua-t' : 'privati'}">${isMia ? 'la tua' : 'dettagli privati'}</span>
-              </div>
-            </div>`;
+          html += `<div class="brigata-row ${isMia ? 'la-tua' : ''}">
+            <div class="brig-pos">${i + 1}</div>
+            <div class="brig-info">
+              <div class="brig-nome">${b.nome}${isMia ? ' <span style="font-size:0.7rem;color:#4a90d9">(tu)</span>' : ''}</div>
+              <div class="brig-sub">Cap: ${capNome} · ${nMembri} membri</div>
+            </div>
+            <div class="brig-right">
+              <div class="brig-pts ${isMia ? 'la-tua-c' : ''}">${pts} pts</div>
+              <span class="brig-tag ${isMia ? 'tua-t' : 'privati'}">${isMia ? 'la tua' : 'dettagli privati'}</span>
+            </div>
+          </div>`;
         });
         html += `</div>`;
       } else {
         html += `<div class="empty-state"><div class="emoji">⚓</div><p>Nessuna brigata ancora.<br>Sii il primo Capitano!</p></div>`;
       }
 
-      // Dettaglio brigata personale
       if (miaBrigataId && membriBrigata[miaBrigataId]?.length) {
         const miaBrig = brigate.find(b => b.id === miaBrigataId);
         html += `<div class="dettaglio-brigata">`;
@@ -1804,15 +1685,11 @@
           const [bg, fg] = coloreAvatar(u.nickname || u.nome);
           const isCapBrig = brigate.find(b => b.id === miaBrigataId)?.capitano_id === u.id;
           const nick = u.nickname ? `@${u.nickname}` : (u.nome || '?');
-          html += `
-            <div class="membro-row">
-              <div class="membro-avatar" style="background:${bg};color:${fg}">${iniz}</div>
-              <div class="membro-nome">
-                ${nick}
-                ${isCapBrig ? '<span class="cap-badge">Capitano</span>' : ''}
-              </div>
-              <div class="membro-pts">${u.stagione_corrente_punti || 0} pts</div>
-            </div>`;
+          html += `<div class="membro-row">
+            <div class="membro-avatar" style="background:${bg};color:${fg}">${iniz}</div>
+            <div class="membro-nome">${nick}${isCapBrig ? '<span class="cap-badge">Capitano</span>' : ''}</div>
+            <div class="membro-pts">${u.stagione_corrente_punti || 0} pts</div>
+          </div>`;
         });
         html += `</div></div>`;
       }
@@ -1828,9 +1705,6 @@
     }
   }
 
-  // ─────────────────────────────────────────────
-  // INVITI
-  // ─────────────────────────────────────────────
   async function caricaInviti() {
     const contenuto = document.getElementById('contenuto-inviti');
     contenuto.innerHTML = '<div class="loading"><div class="spin"></div><br>Caricamento...</div>';
@@ -1843,62 +1717,53 @@
     const linkPersonale = `https://fantagaffe.github.io/fantagaffe/invito.html?ref=${utenteCorrente.invite_code || utenteCorrente.id}`;
 
     let inviti = [];
-    try {
-      inviti = await dbAuth(`inviti?invitante_id=eq.${utenteCorrente.id}&order=created_at.desc`);
-    } catch (e) {}
+    try { inviti = await dbAuth(`inviti?invitante_id=eq.${utenteCorrente.id}&order=created_at.desc`); } catch (e) {}
 
     let html = `<p class="sezione-titolo">Invita i tuoi amici</p>`;
 
-    // Box link personale
-    html += `
-      <div class="invito-link-box">
-        <p>Il tuo link personale — condividilo direttamente:</p>
-        <div class="invito-link-text">${linkPersonale}</div>
+    html += `<div class="invito-link-box">
+      <p>Il tuo link personale — condividilo direttamente:</p>
+      <div class="invito-link-text">${linkPersonale}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-copia" onclick="copiaLink('${linkPersonale}')">📋 Copia link</button>
+        <button class="btn-copia" style="background:rgba(37,211,102,0.12);border-color:rgba(37,211,102,0.3);color:#25d366" onclick="mandaWhatsappDiretto('${linkPersonale}')">💬 WhatsApp</button>
+      </div>
+    </div>`;
+
+    html += `<div class="invito-form">
+      <h3>✉️ Invita via email</h3>
+      <p>Inserisci nome e email del tuo amico. Gli mandiamo un link personalizzato.</p>
+      <input class="invito-input" id="invito-nome" type="text" placeholder="Nome dell'amico" autocomplete="off" />
+      <input class="invito-input" id="invito-email" type="email" placeholder="Email dell'amico" autocomplete="off" />
+      <button class="btn-invita" id="btn-invita" onclick="mandaInvito()">Invia invito →</button>
+      <div id="msg-invito" style="margin-top:10px;font-size:0.82rem;display:none"></div>
+      <div id="box-link-generato" style="display:none;margin-top:14px;background:var(--bg3);border:1px solid rgba(245,197,24,0.3);border-radius:var(--radius-sm);padding:14px">
+        <div style="font-size:0.75rem;color:var(--text2);margin-bottom:8px">✅ Invito per <strong id="nome-link-generato"></strong> — copialo o mandalo su WhatsApp</div>
+        <div id="testo-link-generato" style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--oro);word-break:break-all;line-height:1.5;margin-bottom:10px"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn-copia" onclick="copiaLink('${linkPersonale}')">📋 Copia link</button>
-          <button class="btn-copia" style="background:rgba(37,211,102,0.12);border-color:rgba(37,211,102,0.3);color:#25d366" onclick="mandaWhatsappDiretto('${linkPersonale}')">💬 WhatsApp</button>
+          <button class="btn-copia" onclick="copiaLinkGenerato()">📋 Copia link</button>
+          <button class="btn-copia" style="background:rgba(37,211,102,0.12);border-color:rgba(37,211,102,0.3);color:#25d366" onclick="mandaWhatsappGenerato()">💬 WhatsApp</button>
         </div>
-      </div>`;
+      </div>
+    </div>`;
 
-    // Form nuovo invito email
-    html += `
-      <div class="invito-form">
-        <h3>✉️ Invita via email</h3>
-        <p>Inserisci nome e email del tuo amico. Gli mandiamo un link personalizzato.</p>
-        <input class="invito-input" id="invito-nome" type="text" placeholder="Nome dell'amico" autocomplete="off" />
-        <input class="invito-input" id="invito-email" type="email" placeholder="Email dell'amico" autocomplete="off" />
-        <button class="btn-invita" id="btn-invita" onclick="mandaInvito()">Invia invito →</button>
-        <div id="msg-invito" style="margin-top:10px;font-size:0.82rem;display:none"></div>
-        <div id="box-link-generato" style="display:none;margin-top:14px;background:var(--bg3);border:1px solid rgba(245,197,24,0.3);border-radius:var(--radius-sm);padding:14px">
-          <div style="font-size:0.75rem;color:var(--text2);margin-bottom:8px">✅ Invito per <strong id="nome-link-generato"></strong> — copialo o mandalo su WhatsApp</div>
-          <div id="testo-link-generato" style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--oro);word-break:break-all;line-height:1.5;margin-bottom:10px"></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn-copia" onclick="copiaLinkGenerato()">📋 Copia link</button>
-            <button class="btn-copia" style="background:rgba(37,211,102,0.12);border-color:rgba(37,211,102,0.3);color:#25d366" onclick="mandaWhatsappGenerato()">💬 WhatsApp</button>
-          </div>
-        </div>
-      </div>`;
-
-    // Lista inviti inviati
     if (inviti.length) {
       html += `<p class="sezione-titolo">I tuoi inviti (${inviti.length})</p>`;
       html += `<div class="card" style="padding:0 16px;overflow:hidden">`;
       inviti.forEach(inv => {
         const statoClass = inv.stato === 'accettato' ? 'stato-accettato' : inv.stato === 'scaduto' ? 'stato-scaduto' : 'stato-inviato';
         const statoLabel = inv.stato === 'accettato' ? '✅ accettato' : inv.stato === 'scaduto' ? 'scaduto' : '⏳ in attesa';
-        html += `
-          <div class="invito-row">
-            <div class="invito-email">${inv.email_invitato}</div>
-            <span class="invito-stato ${statoClass}">${statoLabel}</span>
-          </div>`;
+        html += `<div class="invito-row">
+          <div class="invito-email">${inv.email_invitato}</div>
+          <span class="invito-stato ${statoClass}">${statoLabel}</span>
+        </div>`;
       });
       html += `</div>`;
     } else {
-      html += `
-        <div class="empty-state" style="padding:32px 20px">
-          <div class="emoji">📭</div>
-          <p>Non hai ancora invitato nessuno.<br>Ogni persona che inviti è collegata a te per sempre.</p>
-        </div>`;
+      html += `<div class="empty-state" style="padding:32px 20px">
+        <div class="emoji">📭</div>
+        <p>Non hai ancora invitato nessuno.<br>Ogni persona che inviti è collegata a te per sempre.</p>
+      </div>`;
     }
 
     contenuto.innerHTML = html;
@@ -1920,18 +1785,12 @@
       });
   }
 
-  function copiaLinkGenerato() {
-    if (_linkGeneratoCorrente) copiaLink(_linkGeneratoCorrente);
-  }
-
+  function copiaLinkGenerato() { if (_linkGeneratoCorrente) copiaLink(_linkGeneratoCorrente); }
   function mandaWhatsappDiretto(link) {
     const testo = encodeURIComponent('Ciao! Ti invito a giocare a FantaGaffe — il fantasy game sulla politica italiana 🇮🇹\n\nRegistrati qui: ' + link);
     window.open('https://wa.me/?text=' + testo, '_blank');
   }
-
-  function mandaWhatsappGenerato() {
-    if (_linkGeneratoCorrente) mandaWhatsappDiretto(_linkGeneratoCorrente);
-  }
+  function mandaWhatsappGenerato() { if (_linkGeneratoCorrente) mandaWhatsappDiretto(_linkGeneratoCorrente); }
 
   async function mandaInvito() {
     const nome = document.getElementById('invito-nome').value.trim();
@@ -1953,27 +1812,14 @@
       await dbAuth('inviti', {
         method: 'POST',
         prefer: 'return=minimal',
-        body: {
-          invitante_id: utenteCorrente.id,
-          email_invitato: email,
-          stato: 'inviato',
-          token: token
-        }
+        body: { invitante_id: utenteCorrente.id, email_invitato: email, stato: 'inviato', token: token }
       });
 
       const nomeInvitante = utenteCorrente.nickname || utenteCorrente.nome || 'Un amico';
       const edgeRes = await fetch(`${SUPABASE_URL}/functions/v1/invia-invito`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_KEY}`
-        },
-        body: JSON.stringify({
-          email: email,
-          token: token,
-          nome_invitato: nome,
-          nome_invitante: nomeInvitante
-        })
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+        body: JSON.stringify({ email, token, nome_invitato: nome, nome_invitante: nomeInvitante })
       });
 
       const edgeData = await edgeRes.json().catch(() => ({}));
@@ -1984,17 +1830,15 @@
       document.getElementById('testo-link-generato').textContent = linkInvito;
       document.getElementById('box-link-generato').style.display = 'block';
 
-      if (edgeData.ok) {
-        mostraMsg(msg, `✅ Email inviata a ${nome}! Puoi anche condividere il link su WhatsApp.`, 'ok');
-      } else {
-        mostraMsg(msg, `⚠️ Email non inviata. Usa il link qui sotto per mandarlo su WhatsApp.`, 'err');
-      }
+      mostraMsg(msg, edgeData.ok
+        ? `✅ Email inviata a ${nome}! Puoi anche condividere il link su WhatsApp.`
+        : `⚠️ Email non inviata. Usa il link qui sotto per mandarlo su WhatsApp.`,
+        edgeData.ok ? 'ok' : 'err');
 
       document.getElementById('invito-nome').value = '';
       document.getElementById('invito-email').value = '';
       btn.disabled = false;
       btn.textContent = 'Invia invito →';
-
       setTimeout(() => caricaInviti(), 1200);
 
     } catch (e) {
@@ -2010,25 +1854,11 @@
     el.style.color = tipo === 'ok' ? '#4dbb84' : '#e87070';
   }
 
-  // ─────────────────────────────────────────────
-  // MERCATO
-  // ─────────────────────────────────────────────
   async function apriMercato() {
-    // FIX 1: Blocco mercato lunedì→venerdì
-    if (!mercatoAperto()) {
-      toast('🔒 Mercato chiuso. Si riapre sabato!', 'err');
-      return;
-    }
-
+    if (!mercatoAperto()) { toast('🔒 Mercato chiuso. Si riapre sabato!', 'err'); return; }
     const mercato = document.getElementById('view-mercato');
     mercato.classList.add('aperto');
     mercatoScelti = [];
-
-    // Se ha già una squadra, precarica le sue scelte
-    if (squadraCorrente?.politici?.length) {
-      // Verrà popolato dopo il caricamento del roster
-    }
-
     aggiornaUIBudget();
 
     const lista = document.getElementById('mercato-lista');
@@ -2043,17 +1873,12 @@
       const ids = roster.map(r => r.politico_id).join(',');
       const politici = await db(`politici?id=in.(${ids})&order=cognome.asc&select=id,nome,cognome,partito,ruolo_attuale`);
       const mapCosto = Object.fromEntries(roster.map(r => [r.politico_id, r.costo_lire]));
-
       rosterDisponibile = politici.map(p => ({ ...p, costo_lire: mapCosto[p.id] || 10 }));
 
-      // Se ha già una squadra salvata, precarica la selezione
       if (squadraCorrente?.politici?.length) {
         const capId = squadraCorrente.capitano_politico_id;
         mercatoScelti = squadraCorrente.politici
-          .map(pid => {
-            const pol = rosterDisponibile.find(p => p.id === pid);
-            return pol ? { ...pol, capitano: pid === capId } : null;
-          })
+          .map(pid => { const pol = rosterDisponibile.find(p => p.id === pid); return pol ? { ...pol, capitano: pid === capId } : null; })
           .filter(Boolean);
         aggiornaUIBudget();
         renderChips();
@@ -2074,16 +1899,10 @@
       const selIdx = mercatoScelti.findIndex(s => s.id === p.id);
       const isSel = selIdx >= 0;
       const isCap = isSel && mercatoScelti[selIdx].capitano;
-      const budgetOK = !isSel && p.costo_lire <= budgetRimasto;
-      const slotLiberi = mercatoScelti.length < 8;
-      const esaurito = !isSel && (!budgetOK || !slotLiberi);
+      const esaurito = !isSel && (p.costo_lire > budgetRimasto || mercatoScelti.length >= 8);
+      let checkSymbol = isCap ? '★' : isSel ? '✓' : '';
 
-      let checkSymbol = '';
-      if (isCap) checkSymbol = '★';
-      else if (isSel) checkSymbol = '✓';
-
-      return `<div class="pol-mercato ${isCap ? 'capitano-sel' : isSel ? 'selezionato' : ''} ${esaurito ? 'esaurito' : ''}"
-        onclick="togglePoliticoMercato('${p.id}')">
+      return `<div class="pol-mercato ${isCap ? 'capitano-sel' : isSel ? 'selezionato' : ''} ${esaurito ? 'esaurito' : ''}" onclick="togglePoliticoMercato('${p.id}')">
         <div class="pol-m-check">${checkSymbol}</div>
         <div class="pol-m-info">
           <div class="pol-m-nome">${p.cognome} ${p.nome}${isCap ? ' <span class="cap-badge">CAP ×2</span>' : ''}</div>
@@ -2105,12 +1924,10 @@
       if (budgetSpeso + pol.costo_lire > 100) { toast('Budget insufficiente!', 'err'); return; }
       mercatoScelti.push({ ...pol, capitano: false });
     } else if (!mercatoScelti[idx].capitano) {
-      // Rimuovi precedente capitano se c'era
       mercatoScelti = mercatoScelti.map(p => ({ ...p, capitano: false }));
       mercatoScelti[idx].capitano = true;
       toast('★ Capitano nominato! Vale doppio.', 'ok');
     } else {
-      // Era già capitano → rimuovi dalla squadra
       mercatoScelti.splice(idx, 1);
     }
 
@@ -2134,8 +1951,7 @@
   }
 
   function renderChips() {
-    const el = document.getElementById('mercato-scelti');
-    el.innerHTML = mercatoScelti.map(p =>
+    document.getElementById('mercato-scelti').innerHTML = mercatoScelti.map(p =>
       `<span class="chip-pol ${p.capitano ? 'cap' : ''}">
         ${p.capitano ? '★ ' : ''}${p.cognome}
         <span class="remove" onclick="event.stopPropagation();togglePoliticoMercato('${p.id}')">×</span>
@@ -2143,17 +1959,9 @@
     ).join('');
   }
 
-  // FIX 2: Upsert corretto — cancella la riga esistente e reinserisci
   async function confermaSquadra() {
     if (!utenteCorrente) { toast('Accedi prima!', 'err'); return; }
-
-    // Blocco sicurezza: double-check lato client
-    if (!mercatoAperto()) {
-      toast('🔒 Mercato chiuso. Non puoi modificare la squadra adesso.', 'err');
-      chiudiMercato();
-      return;
-    }
-
+    if (!mercatoAperto()) { toast('🔒 Mercato chiuso.', 'err'); chiudiMercato(); return; }
     const haCapitano = mercatoScelti.some(p => p.capitano);
     if (mercatoScelti.length !== 8 || !haCapitano) return;
 
@@ -2165,16 +1973,12 @@
       const capitanoId = mercatoScelti.find(p => p.capitano).id;
       const ids = mercatoScelti.map(p => p.id);
 
-      // FIX: prima cancella la riga esistente per questa settimana (se c'è)
-      // poi inserisci la nuova — evita duplicati al 100%
       if (squadraCorrente) {
         await dbAuth(`squadre?user_id=eq.${utenteCorrente.id}&settimana=eq.${settimanaCorrente}`, {
-          method: 'DELETE',
-          prefer: 'return=minimal'
+          method: 'DELETE', prefer: 'return=minimal'
         });
       }
 
-      // Inserisci la nuova squadra
       await dbAuth('squadre', {
         method: 'POST',
         prefer: 'return=minimal',
@@ -2205,12 +2009,8 @@
     document.getElementById('view-mercato').classList.remove('aperto');
   }
 
-  // ─────────────────────────────────────────────
-  // START
-  // ─────────────────────────────────────────────
   init();
 
-  // PWA — registra service worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/fantagaffe/sw.js').catch(() => {});
   }
