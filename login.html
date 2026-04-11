@@ -4,6 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>FantaGaffe — Accedi</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FantaGaffe" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -91,7 +100,6 @@
       margin-bottom: 16px;
     }
 
-    /* TAB SWITCHER */
     .tab-switcher {
       display: flex;
       background: var(--bg3);
@@ -115,15 +123,9 @@
       transition: all 0.2s;
     }
 
-    .tab-btn.attivo {
-      background: var(--verde);
-      color: #fff;
-    }
+    .tab-btn.attivo { background: var(--verde); color: #fff; }
 
-    /* FORM */
-    .form-group {
-      margin-bottom: 14px;
-    }
+    .form-group { margin-bottom: 14px; }
 
     .form-label {
       display: block;
@@ -151,10 +153,7 @@
       -webkit-appearance: none;
     }
 
-    .form-input:focus {
-      border-color: rgba(0,146,70,0.5);
-    }
-
+    .form-input:focus { border-color: rgba(0,146,70,0.5); }
     .form-input::placeholder { color: var(--text3); }
 
     select.form-input {
@@ -164,10 +163,7 @@
       padding-right: 36px;
     }
 
-    select.form-input option {
-      background: var(--bg3);
-      color: var(--text);
-    }
+    select.form-input option { background: var(--bg3); color: var(--text); }
 
     .form-row {
       display: grid;
@@ -175,11 +171,7 @@
       gap: 10px;
     }
 
-    /* GENERE */
-    .genere-group {
-      display: flex;
-      gap: 8px;
-    }
+    .genere-group { display: flex; gap: 8px; }
 
     .genere-btn {
       flex: 1;
@@ -202,7 +194,6 @@
       color: #4dbb84;
     }
 
-    /* CHECKBOX */
     .checkbox-group {
       display: flex;
       align-items: flex-start;
@@ -257,7 +248,6 @@
 
     .checkbox-testo strong { color: var(--text); }
 
-    /* SEZIONE TITOLO */
     .sezione-reg {
       font-family: 'DM Mono', monospace;
       font-size: 0.6rem;
@@ -269,7 +259,6 @@
       border-bottom: 1px solid var(--border);
     }
 
-    /* BTN PRINCIPALE */
     .btn-main {
       width: 100%;
       padding: 15px;
@@ -288,7 +277,6 @@
     .btn-main:active { opacity: 0.85; transform: scale(0.98); }
     .btn-main:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-    /* ERRORE / SUCCESSO */
     .msg-box {
       padding: 12px 14px;
       border-radius: var(--radius-sm);
@@ -312,32 +300,26 @@
       display: block;
     }
 
-    /* DIVIDER */
-    .divider {
+    /* Link "password dimenticata" */
+    .link-secondario {
+      display: block;
       text-align: center;
-      position: relative;
-      margin: 20px 0 16px;
-    }
-
-    .divider::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 0; right: 0;
-      height: 1px;
-      background: var(--border);
-    }
-
-    .divider span {
-      position: relative;
-      background: var(--bg2);
-      padding: 0 12px;
-      font-size: 0.72rem;
+      margin-top: 14px;
+      font-size: 0.8rem;
       color: var(--text3);
-      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      transition: color 0.2s;
+      background: none;
+      border: none;
+      width: 100%;
+      font-family: 'DM Sans', sans-serif;
     }
 
-    /* NOTA FOOTER */
+    .link-secondario:hover { color: var(--text2); }
+
+    /* Form reset password */
+    #form-reset { display: none; }
+
     .nota-footer {
       position: relative;
       z-index: 1;
@@ -348,9 +330,6 @@
       padding: 0 10px;
     }
 
-    .nota-footer a { color: var(--text2); text-decoration: underline; }
-
-    /* LOADING SPINNER */
     .spin {
       display: inline-block;
       width: 16px; height: 16px;
@@ -366,7 +345,6 @@
 
     .nascosto { display: none !important; }
 
-    /* INVITO BANNER */
     .invito-banner {
       position: relative;
       z-index: 1;
@@ -392,7 +370,6 @@
   <span class="logo-sub">Il gioco più serio sulla politica meno seria</span>
 </div>
 
-<!-- BANNER INVITO (visibile solo se arriva con token) -->
 <div class="invito-banner nascosto" id="invito-banner">
   <span class="invito-emoji">🎟️</span>
   Sei stato invitato da <strong id="invito-nome">—</strong>. Registrati per entrare nel gioco!
@@ -400,13 +377,12 @@
 
 <div class="card">
 
-  <!-- TAB SWITCHER -->
-  <div class="tab-switcher">
+  <!-- TAB — nascosto nel form reset -->
+  <div class="tab-switcher" id="tab-switcher">
     <button class="tab-btn attivo" id="tab-accedi" onclick="mostraTab('accedi')">Accedi</button>
     <button class="tab-btn" id="tab-registrati" onclick="mostraTab('registrati')">Registrati</button>
   </div>
 
-  <!-- MESSAGGIO FEEDBACK -->
   <div class="msg-box" id="msg-box"></div>
 
   <!-- ── FORM ACCEDI ── -->
@@ -420,6 +396,21 @@
       <input class="form-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
     </div>
     <button class="btn-main" id="btn-accedi" onclick="accedi()">Accedi</button>
+    <button class="link-secondario" onclick="mostraReset()">Password dimenticata?</button>
+  </div>
+
+  <!-- ── FORM RESET PASSWORD ── -->
+  <div id="form-reset">
+    <div style="margin-bottom:20px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:1px;color:var(--oro);margin-bottom:6px">Reimposta password</div>
+      <div style="font-size:0.82rem;color:var(--text2);line-height:1.5">Inserisci la tua email. Ti mandiamo un link per scegliere una nuova password.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" id="reset-email" placeholder="la-tua@email.com" autocomplete="email" />
+    </div>
+    <button class="btn-main" id="btn-reset" onclick="mandaReset()">Invia link →</button>
+    <button class="link-secondario" onclick="tornaLogin()">← Torna al login</button>
   </div>
 
   <!-- ── FORM REGISTRATI ── -->
@@ -505,7 +496,7 @@
     <label class="checkbox-group">
       <input type="checkbox" id="consenso-marketing" />
       <span class="checkbox-testo">
-        Acconsento a ricevere <strong>comunicazioni commerciali</strong> personalizzate da FantaGaffe (newsletter, offerte, aggiornamenti). Potrai revocare il consenso in qualsiasi momento.
+        Acconsento a ricevere <strong>comunicazioni commerciali</strong> personalizzate da FantaGaffe. Potrai revocare il consenso in qualsiasi momento.
       </span>
     </label>
 
@@ -525,34 +516,28 @@
 </div>
 
 <script>
-  // ─────────────────────────────────────────────
-  // CONFIG SUPABASE
-  // ─────────────────────────────────────────────
   const SUPABASE_URL = 'https://shkrdjqqeradgsucrfib.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa3JkanFxZXJhZGdzdWNyZmliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNDE2NTAsImV4cCI6MjA5MDkxNzY1MH0.wxfwYednaNxhdpDLKZWuvrTLIt8clVHvmnhgTj8cqtA';
 
-  // ─────────────────────────────────────────────
-  // STATO
-  // ─────────────────────────────────────────────
   let genereSelezionato = '';
   let tokenInvito = '';
   let invitanteId = '';
 
-  // ─────────────────────────────────────────────
-  // INIT — leggi token invito dall'URL
-  // ─────────────────────────────────────────────
+  // ── INIT ──
   async function init() {
+    // Registra service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/fantagaffe/sw.js').catch(() => {});
+    }
+
     const params = new URLSearchParams(window.location.search);
     tokenInvito = params.get('invito') || '';
 
-    // Controlla se già loggato
+    // Se già loggato vai alla dashboard
     const session = await getSession();
-    if (session) {
-      window.location.href = 'dashboard.html';
-      return;
-    }
+    if (session) { window.location.href = 'dashboard.html'; return; }
 
-    // Se c'è token invito, mostra banner e passa a registrazione
+    // Gestisci token invito
     if (tokenInvito) {
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/inviti?token=eq.${tokenInvito}&select=invitante_id,stato`, {
@@ -561,7 +546,6 @@
         const data = await res.json();
         if (data.length && data[0].stato === 'inviato') {
           invitanteId = data[0].invitante_id;
-          // Carica nome invitante
           const userRes = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${invitanteId}&select=nickname,nome`, {
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
           });
@@ -573,15 +557,18 @@
           }
           mostraTab('registrati');
         }
-      } catch(e) {
-        console.log('Errore lettura invito:', e);
-      }
+      } catch (e) {}
+    }
+
+    // Gestisci ritorno da link reset password (Supabase manda ?type=recovery)
+    const tipo = params.get('type');
+    const accessToken = params.get('access_token');
+    if (tipo === 'recovery' && accessToken) {
+      mostraFormNuovaPassword(accessToken);
     }
   }
 
-  // ─────────────────────────────────────────────
-  // SESSION
-  // ─────────────────────────────────────────────
+  // ── SESSION ──
   async function getSession() {
     const refresh = localStorage.getItem('sb_refresh');
     if (!refresh) return null;
@@ -596,21 +583,35 @@
         localStorage.setItem('sb_refresh', data.refresh_token);
         return data;
       }
-    } catch(e) {}
+    } catch (e) {}
     localStorage.removeItem('sb_refresh');
     return null;
   }
 
-  // ─────────────────────────────────────────────
-  // UI HELPERS
-  // ─────────────────────────────────────────────
+  // ── UI ──
   function mostraTab(tab) {
     const isReg = tab === 'registrati';
     document.getElementById('form-accedi').classList.toggle('nascosto', isReg);
     document.getElementById('form-registrati').classList.toggle('nascosto', !isReg);
+    document.getElementById('form-reset').style.display = 'none';
+    document.getElementById('tab-switcher').classList.remove('nascosto');
     document.getElementById('tab-accedi').classList.toggle('attivo', !isReg);
     document.getElementById('tab-registrati').classList.toggle('attivo', isReg);
-    nascondimsg();
+    nascondiMsg();
+  }
+
+  function mostraReset() {
+    document.getElementById('form-accedi').classList.add('nascosto');
+    document.getElementById('form-registrati').classList.add('nascosto');
+    document.getElementById('form-reset').style.display = 'block';
+    document.getElementById('tab-switcher').classList.add('nascosto');
+    nascondiMsg();
+  }
+
+  function tornaLogin() {
+    document.getElementById('form-reset').style.display = 'none';
+    document.getElementById('tab-switcher').classList.remove('nascosto');
+    mostraTab('accedi');
   }
 
   function mostraMsg(testo, tipo) {
@@ -619,7 +620,7 @@
     el.className = 'msg-box ' + tipo;
   }
 
-  function nascondimsg() {
+  function nascondiMsg() {
     const el = document.getElementById('msg-box');
     el.className = 'msg-box';
     el.textContent = '';
@@ -627,7 +628,7 @@
 
   function selezionaGenere(g) {
     genereSelezionato = g;
-    ['M','F','X'].forEach(id => {
+    ['M', 'F', 'X'].forEach(id => {
       document.getElementById('gen-' + id.toLowerCase()).classList.toggle('selezionato', id === g);
     });
   }
@@ -638,27 +639,18 @@
     btn.innerHTML = loading ? '<span class="spin"></span>Attendere...' : testoNormale;
   }
 
-  // ─────────────────────────────────────────────
-  // GENERA CODICE INVITO
-  // ─────────────────────────────────────────────
   function generaCodice() {
     return Math.random().toString(36).substring(2, 10).toUpperCase();
   }
 
-  // ─────────────────────────────────────────────
-  // ACCEDI
-  // ─────────────────────────────────────────────
+  // ── ACCEDI ──
   async function accedi() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
-
-    if (!email || !password) {
-      mostraMsg('Inserisci email e password.', 'errore');
-      return;
-    }
+    if (!email || !password) { mostraMsg('Inserisci email e password.', 'errore'); return; }
 
     setLoading('btn-accedi', true, 'Accedi');
-    nascondimsg();
+    nascondiMsg();
 
     try {
       const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
@@ -667,23 +659,114 @@
         body: JSON.stringify({ email, password })
       });
       const data = await res.json();
-
       if (data.access_token) {
         localStorage.setItem('sb_refresh', data.refresh_token);
         window.location.href = 'dashboard.html';
       } else {
-        mostraMsg(data.error_description || 'Email o password errati.', 'errore');
+        mostraMsg('Email o password errati.', 'errore');
         setLoading('btn-accedi', false, 'Accedi');
       }
-    } catch(e) {
+    } catch (e) {
       mostraMsg('Errore di connessione. Riprova.', 'errore');
       setLoading('btn-accedi', false, 'Accedi');
     }
   }
 
-  // ─────────────────────────────────────────────
-  // REGISTRATI
-  // ─────────────────────────────────────────────
+  // ── RESET PASSWORD: manda email ──
+  async function mandaReset() {
+    const email = document.getElementById('reset-email').value.trim();
+    if (!email || !email.includes('@')) { mostraMsg("Inserisci un'email valida.", 'errore'); return; }
+
+    setLoading('btn-reset', true, 'Invia link →');
+    nascondiMsg();
+
+    try {
+      // Supabase manda automaticamente un'email con link che contiene ?type=recovery&access_token=...
+      // Il link riporta l'utente su questa stessa pagina
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          redirect_to: 'https://fantagaffe.github.io/fantagaffe/login.html'
+        })
+      });
+
+      // Supabase risponde sempre 200 per sicurezza (non rivela se l'email esiste)
+      mostraMsg('✅ Se questa email è registrata, riceverai un link entro pochi minuti. Controlla anche la cartella spam.', 'successo');
+      setLoading('btn-reset', false, 'Invia link →');
+    } catch (e) {
+      mostraMsg('Errore di connessione. Riprova.', 'errore');
+      setLoading('btn-reset', false, 'Invia link →');
+    }
+  }
+
+  // ── RESET PASSWORD: nuova password dopo click sul link email ──
+  let _resetToken = '';
+
+  function mostraFormNuovaPassword(token) {
+    _resetToken = token;
+    // Sostituisci il contenuto della card con form nuova password
+    document.querySelector('.card').innerHTML = `
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:1px;color:var(--oro);margin-bottom:6px">Nuova password</div>
+      <div style="font-size:0.82rem;color:var(--text2);line-height:1.5;margin-bottom:20px">Scegli una nuova password per il tuo account.</div>
+      <div class="msg-box" id="msg-box-reset"></div>
+      <div class="form-group">
+        <label class="form-label">Nuova password</label>
+        <input class="form-input" type="password" id="nuova-password" placeholder="Min. 8 caratteri" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Conferma password</label>
+        <input class="form-input" type="password" id="nuova-password2" placeholder="Ripeti la password" />
+      </div>
+      <button class="btn-main" id="btn-salva-password" onclick="salvaNuovaPassword()">Salva nuova password</button>
+    `;
+  }
+
+  async function salvaNuovaPassword() {
+    const p1 = document.getElementById('nuova-password').value;
+    const p2 = document.getElementById('nuova-password2').value;
+    const msgEl = document.getElementById('msg-box-reset');
+
+    const mostraErrReset = (t) => { msgEl.textContent = t; msgEl.className = 'msg-box errore'; };
+    const mostraOkReset = (t) => { msgEl.textContent = t; msgEl.className = 'msg-box successo'; };
+
+    if (p1.length < 8) { mostraErrReset('La password deve avere almeno 8 caratteri.'); return; }
+    if (p1 !== p2) { mostraErrReset('Le password non coincidono.'); return; }
+
+    const btn = document.getElementById('btn-salva-password');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span>Salvataggio...';
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        method: 'PUT',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${_resetToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password: p1 })
+      });
+      const data = await res.json();
+      if (data.id) {
+        mostraOkReset('✅ Password aggiornata! Reindirizzamento al login...');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 2000);
+      } else {
+        mostraErrReset(data.message || 'Errore. Il link potrebbe essere scaduto — richiedine uno nuovo.');
+        btn.disabled = false;
+        btn.textContent = 'Salva nuova password';
+      }
+    } catch (e) {
+      mostraErrReset('Errore di connessione. Riprova.');
+      btn.disabled = false;
+      btn.textContent = 'Salva nuova password';
+    }
+  }
+
+  // ── REGISTRATI ──
   async function registrati() {
     const nickname = document.getElementById('reg-nickname').value.trim();
     const email = document.getElementById('reg-email').value.trim();
@@ -697,22 +780,21 @@
     const termini = document.getElementById('consenso-termini').checked;
     const marketing = document.getElementById('consenso-marketing').checked;
 
-    // Validazione
     if (!nickname) { mostraMsg('Il nickname è obbligatorio.', 'errore'); return; }
     if (nickname.length < 3) { mostraMsg('Il nickname deve avere almeno 3 caratteri.', 'errore'); return; }
-    if (!email) { mostraMsg('L\'email è obbligatoria.', 'errore'); return; }
+    if (!email) { mostraMsg("L'email è obbligatoria.", 'errore'); return; }
     if (!password || password.length < 8) { mostraMsg('La password deve avere almeno 8 caratteri.', 'errore'); return; }
     if (!nome || !cognome) { mostraMsg('Nome e cognome sono obbligatori.', 'errore'); return; }
     if (!genereSelezionato) { mostraMsg('Seleziona il genere.', 'errore'); return; }
     if (!citta || !paese) { mostraMsg('Città e paese sono obbligatori.', 'errore'); return; }
-    if (!eta) { mostraMsg('Seleziona la fascia d\'età.', 'errore'); return; }
+    if (!eta) { mostraMsg("Seleziona la fascia d'età.", 'errore'); return; }
     if (!termini) { mostraMsg('Devi accettare i Termini di Servizio per continuare.', 'errore'); return; }
 
     setLoading('btn-registrati', true, 'Crea account');
-    nascondimsg();
+    nascondiMsg();
 
     try {
-      // 1. Crea utente in Supabase Auth
+      // 1. Crea utente Auth
       const authRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
@@ -721,8 +803,7 @@
       const authData = await authRes.json();
 
       if (!authData.user && !authData.id) {
-        const errMsg = authData.msg || authData.error_description || 'Registrazione fallita.';
-        mostraMsg(errMsg, 'errore');
+        mostraMsg(authData.msg || authData.error_description || 'Registrazione fallita.', 'errore');
         setLoading('btn-registrati', false, 'Crea account');
         return;
       }
@@ -731,28 +812,8 @@
       const accessToken = authData.access_token;
       const refreshToken = authData.refresh_token;
 
-      // 2. Inserisci nella tabella users
+      // 2. Inserisci profilo utente
       const inviteCode = generaCodice();
-      const userPayload = {
-        id: userId,
-        email,
-        nickname,
-        nome,
-        cognome,
-        genere: genereSelezionato,
-        citta,
-        paese,
-        fascia_eta: eta,
-        telefono: telefono || null,
-        invite_code: inviteCode,
-        invited_by: invitanteId || null,
-        livello: 'membro',
-        settimane_consecutive: 0,
-        is_attivo_questa_settimana: false,
-        stagione_corrente_punti: 0,
-        consenso_marketing: marketing
-      };
-
       const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
         method: 'POST',
         headers: {
@@ -761,13 +822,30 @@
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify(userPayload)
+        body: JSON.stringify({
+          id: userId,
+          email,
+          nickname,
+          nome,
+          cognome,
+          genere: genereSelezionato,
+          citta,
+          paese,
+          fascia_eta: eta,
+          telefono: telefono || null,
+          invite_code: inviteCode,
+          invited_by: invitanteId || null,
+          livello: 'membro',
+          settimane_consecutive: 0,
+          is_attivo_questa_settimana: false,
+          stagione_corrente_punti: 0,
+          consenso_marketing: marketing
+        })
       });
 
       if (!insertRes.ok) {
         const err = await insertRes.json().catch(() => ({}));
-        // Nickname già in uso
-        if (err.code === '23505' && err.details?.includes('nickname')) {
+        if (err.code === '23505' && (err.details?.includes('nickname') || err.message?.includes('nickname'))) {
           mostraMsg('Nickname già in uso. Scegline un altro.', 'errore');
         } else {
           mostraMsg(err.message || 'Errore nella creazione del profilo.', 'errore');
@@ -776,7 +854,7 @@
         return;
       }
 
-      // 3. Aggiorna stato invito se presente
+      // 3. Aggiorna stato invito
       if (tokenInvito && invitanteId) {
         await fetch(`${SUPABASE_URL}/rest/v1/inviti?token=eq.${tokenInvito}`, {
           method: 'PATCH',
@@ -789,29 +867,29 @@
         });
       }
 
-      // 4. Salva sessione e vai alla dashboard
+      // 4. Sessione e redirect
       if (refreshToken) {
         localStorage.setItem('sb_refresh', refreshToken);
         window.location.href = 'dashboard.html';
       } else {
-        // Supabase richiede verifica email
-        mostraMsg('✅ Account creato! Controlla la tua email per confermare l\'iscrizione, poi accedi.', 'successo');
+        mostraMsg("✅ Account creato! Controlla la tua email per confermare l'iscrizione, poi accedi.", 'successo');
         setLoading('btn-registrati', false, 'Crea account');
         mostraTab('accedi');
       }
 
-    } catch(e) {
+    } catch (e) {
       mostraMsg('Errore di connessione. Riprova.', 'errore');
       setLoading('btn-registrati', false, 'Crea account');
     }
   }
 
-  // Invio con Enter
   document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      const regVisible = !document.getElementById('form-registrati').classList.contains('nascosto');
-      if (regVisible) registrati(); else accedi();
-    }
+    if (e.key !== 'Enter') return;
+    const resetVisibile = document.getElementById('form-reset').style.display === 'block';
+    const regVisibile = !document.getElementById('form-registrati').classList.contains('nascosto');
+    if (resetVisibile) mandaReset();
+    else if (regVisibile) registrati();
+    else accedi();
   });
 
   init();
