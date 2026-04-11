@@ -4,6 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>FantaGaffe</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FantaGaffe" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -41,7 +50,6 @@
       overflow-x: hidden;
     }
 
-    /* NOISE TEXTURE OVERLAY */
     body::before {
       content: '';
       position: fixed;
@@ -91,10 +99,13 @@
       background: linear-gradient(135deg, var(--verde), var(--rosso));
       display: flex; align-items: center; justify-content: center;
       font-family: 'DM Mono', monospace;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 500;
       color: #fff;
       border: 2px solid var(--border);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: clip;
     }
 
     .settimana-badge {
@@ -174,6 +185,22 @@
       text-decoration: none;
     }
     .btn-cta:active { transform: scale(0.97); opacity: 0.9; }
+
+    /* BANNER MERCATO CHIUSO */
+    .mercato-chiuso-banner {
+      background: rgba(206,43,55,0.12);
+      border: 1px solid rgba(206,43,55,0.3);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      font-size: 0.82rem;
+      color: #e87070;
+      line-height: 1.4;
+    }
+    .mercato-chiuso-banner .icona { font-size: 1.1rem; flex-shrink: 0; }
 
     /* COUNTDOWN */
     .countdown-bar {
@@ -609,7 +636,7 @@
       z-index: 200;
       overflow-y: auto;
       display: none;
-      padding-bottom: 100px;
+      padding-bottom: 160px;
     }
     #view-mercato.aperto { display: block; }
 
@@ -1097,35 +1124,56 @@
   // STATO
   // ─────────────────────────────────────────────
   let utenteCorrente = null;
-  let settimanaCorrente = lunediDiQuestaSettimana();
+  let settimanaCorrente = calcolaSabatoDiQuestaSettimana();
   let squadraCorrente = null;
   let mercatoScelti = [];
   let rosterDisponibile = [];
 
-  function lunediDiQuestaSettimana() {
+  // ─────────────────────────────────────────────
+  // CALCOLO SETTIMANA
+  // Il gioco va da sabato a venerdì.
+  // "Questa settimana" = il sabato più recente (o oggi se è sabato).
+  // Mercato APERTO: sabato e domenica.
+  // Mercato CHIUSO (bloccato): lunedì→venerdì.
+  // ─────────────────────────────────────────────
+  function calcolaSabatoDiQuestaSettimana() {
     const oggi = new Date();
-    const giorno = oggi.getDay();
-    const diff = giorno === 0 ? -6 : 1 - giorno;
-    const lun = new Date(oggi);
-    lun.setDate(oggi.getDate() + diff);
-    return lun.toISOString().split('T')[0];
+    const giorno = oggi.getDay(); // 0=dom, 1=lun, ..., 6=sab
+    // Quanti giorni fa era sabato?
+    // sab=6 → 0 giorni fa
+    // dom=0 → 1 giorno fa
+    // lun=1 → 2 giorni fa
+    // mar=2 → 3 giorni fa
+    // mer=3 → 4 giorni fa
+    // gio=4 → 5 giorni fa
+    // ven=5 → 6 giorni fa
+    const giorniDaSabato = giorno === 6 ? 0 : (giorno + 1);
+    const sab = new Date(oggi);
+    sab.setDate(oggi.getDate() - giorniDaSabato);
+    return sab.toISOString().split('T')[0];
   }
 
-  function inizialesDa(nome, cognome) {
-    return ((nome||'').charAt(0) + (cognome||'').charAt(0)).toUpperCase();
+  function mercatoAperto() {
+    // Aperto solo sabato (6) e domenica (0)
+    const giorno = new Date().getDay();
+    return giorno === 0 || giorno === 6;
+  }
+
+  function inizialiDa(nome, cognome) {
+    return ((nome || '').charAt(0) + (cognome || '').charAt(0)).toUpperCase();
   }
 
   function coloreAvatar(str) {
     const colori = [
-      ['rgba(0,146,70,0.3)','#4dbb84'],
-      ['rgba(206,43,55,0.3)','#e87070'],
-      ['rgba(245,197,24,0.2)','#f5c518'],
-      ['rgba(74,144,217,0.3)','#4a90d9'],
-      ['rgba(155,89,182,0.3)','#bb88dd'],
-      ['rgba(230,126,34,0.3)','#e8963a'],
+      ['rgba(0,146,70,0.3)', '#4dbb84'],
+      ['rgba(206,43,55,0.3)', '#e87070'],
+      ['rgba(245,197,24,0.2)', '#f5c518'],
+      ['rgba(74,144,217,0.3)', '#4a90d9'],
+      ['rgba(155,89,182,0.3)', '#bb88dd'],
+      ['rgba(230,126,34,0.3)', '#e8963a'],
     ];
     let h = 0;
-    for (let c of (str||'')) h = (h * 31 + c.charCodeAt(0)) % colori.length;
+    for (let c of (str || '')) h = (h * 31 + c.charCodeAt(0)) % colori.length;
     return colori[Math.abs(h) % colori.length];
   }
 
@@ -1186,7 +1234,7 @@
         localStorage.setItem('sb_refresh', data.refresh_token);
         return data;
       }
-    } catch(e) {}
+    } catch (e) {}
     return null;
   }
 
@@ -1194,9 +1242,10 @@
   // INIT
   // ─────────────────────────────────────────────
   async function init() {
+    // Badge settimana: mostra il sabato di apertura turno
     const d = new Date(settimanaCorrente + 'T00:00:00');
     document.getElementById('badge-settimana').textContent =
-      'Sett. ' + d.toLocaleDateString('it-IT', { day:'2-digit', month:'2-digit' });
+      'Sett. ' + d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' });
 
     try {
       const session = await getSession();
@@ -1207,11 +1256,19 @@
       const utenti = await dbAuth(`users?id=eq.${session.user.id}&limit=1`);
       if (utenti.length) {
         utenteCorrente = utenti[0];
-        const iniz = inizialesDa(utenteCorrente.nome, utenteCorrente.cognome);
-        document.getElementById('avatar-header').textContent = iniz;
+        // FIX: mostra @nickname nell'header, non le iniziali
+        const avatarEl = document.getElementById('avatar-header');
+        if (utenteCorrente.nickname) {
+          // Abbreviazione del nickname: prime 2 lettere
+          avatarEl.textContent = utenteCorrente.nickname.substring(0, 2).toUpperCase();
+        } else {
+          avatarEl.textContent = inizialiDa(utenteCorrente.nome, utenteCorrente.cognome);
+        }
       }
-    } catch(e) {
-      console.log('Sessione non trovata, modalità demo');
+    } catch (e) {
+      console.log('Sessione non trovata, reindirizzo al login');
+      window.location.href = 'login.html';
+      return;
     }
 
     await caricaSquadraCorrente();
@@ -1223,7 +1280,9 @@
     try {
       const sq = await dbAuth(`squadre?user_id=eq.${utenteCorrente.id}&settimana=eq.${settimanaCorrente}&limit=1`);
       squadraCorrente = sq.length ? sq[0] : null;
-    } catch(e) { squadraCorrente = null; }
+    } catch (e) {
+      squadraCorrente = null;
+    }
   }
 
   // ─────────────────────────────────────────────
@@ -1254,17 +1313,18 @@
   // ─────────────────────────────────────────────
   // CLASSIFICA
   // ─────────────────────────────────────────────
-  async function calcolaPuntiReali(userId, politiciIds, capitanoId) {
+  async function calcolaPuntiReali(politiciIds, capitanoId) {
     if (!politiciIds || !politiciIds.length) return 0;
     try {
       const eventi = await db(`eventi?approvato=eq.true&settimana=eq.${settimanaCorrente}&politico_id=in.(${politiciIds.join(',')})`);
       let tot = 0;
       eventi.forEach(e => {
-        const pts = e.politico_id === capitanoId ? e.punti * 2 : e.punti;
-        tot += pts;
+        tot += e.politico_id === capitanoId ? e.punti * 2 : e.punti;
       });
       return tot;
-    } catch(e) { return 0; }
+    } catch (e) {
+      return 0;
+    }
   }
 
   async function caricaClassifica() {
@@ -1274,26 +1334,32 @@
     contenuto.style.display = 'none';
 
     try {
+      // Prendi tutti gli utenti ordinati per punti stagione
       const tuttiUtenti = await db(`users?order=stagione_corrente_punti.desc&select=id,nickname,nome,cognome,livello,stagione_corrente_punti`);
+
+      // Prendi le squadre di questa settimana per calcolare punti live
       const squadreSettimana = await db(`squadre?settimana=eq.${settimanaCorrente}&select=user_id,politici,capitano_politico_id,punti_gioco_totali`);
       const mapSquadre = Object.fromEntries(squadreSettimana.map(s => [s.user_id, s]));
 
-      let puntiRealiMiei = 0;
+      // Calcola punti live per l'utente corrente (per mostrare il totale aggiornato)
+      let puntiLiveMiei = 0;
       if (utenteCorrente && mapSquadre[utenteCorrente.id]) {
         const sq = mapSquadre[utenteCorrente.id];
-        puntiRealiMiei = await calcolaPuntiReali(utenteCorrente.id, sq.politici, sq.capitano_politico_id);
+        puntiLiveMiei = await calcolaPuntiReali(sq.politici, sq.capitano_politico_id);
       }
 
-      const classificaConPunti = tuttiUtenti.map(u => {
-        const sq = mapSquadre[u.id];
-        return { ...u, puntiSettimana: sq ? sq.punti_gioco_totali : 0 };
-      });
+      // Costruisci classifica: punti stagione (dal DB) come base
+      const classificaConPunti = tuttiUtenti.map(u => ({
+        ...u,
+        puntiTotali: u.stagione_corrente_punti || 0
+      }));
 
       const miaPos = classificaConPunti.findIndex(u => utenteCorrente && u.id === utenteCorrente.id);
 
       let html = '';
 
-      if (utenteCorrente && !squadraCorrente) {
+      // Banner "scegli squadra" — solo se il mercato è aperto e non hai ancora scelto
+      if (utenteCorrente && !squadraCorrente && mercatoAperto()) {
         html += `
           <div class="cta-squadra">
             <div class="emoji">🏛️</div>
@@ -1301,19 +1367,34 @@
             <p>Il turno è aperto. Scegli 8 politici con 100 Lire e nomina il tuo Capitano.</p>
             <button class="btn-cta" onclick="apriMercato()">Vai al mercato →</button>
           </div>`;
+      } else if (utenteCorrente && !squadraCorrente && !mercatoAperto()) {
+        // Mercato chiuso e non ha ancora la squadra (caso raro — ha saltato il weekend)
+        html += `
+          <div class="mercato-chiuso-banner">
+            <span class="icona">🔒</span>
+            <span>Il mercato era aperto sabato e domenica. Hai saltato questo turno — la selezione riapre il prossimo sabato.</span>
+          </div>`;
       }
 
-      const prossLun = new Date(settimanaCorrente + 'T00:00:00');
-      prossLun.setDate(prossLun.getDate() + 7);
-      const msRimasti = prossLun - new Date();
+      // Countdown alla fine turno (prossimo venerdì)
+      const oggi = new Date();
+      const giorno = oggi.getDay();
+      const giorniAVenRdi = giorno <= 5 ? 5 - giorno : 6; // giorni fino a venerdì
+      const venRdi = new Date(oggi);
+      venRdi.setDate(oggi.getDate() + (giorno === 5 ? 0 : giorniAVenRdi));
+      venRdi.setHours(23, 59, 0, 0);
+      const msRimasti = venRdi - new Date();
       const gg = Math.floor(msRimasti / 86400000);
       const hh = Math.floor((msRimasti % 86400000) / 3600000);
+      const mm = Math.floor((msRimasti % 3600000) / 60000);
+      const countdownStr = gg > 0 ? `${gg}g ${hh}h` : `${hh}h ${mm}m`;
       html += `
         <div class="countdown-bar">
-          <span class="countdown-label">Turno si chiude tra</span>
-          <span class="countdown-time">${gg}g ${hh}h</span>
+          <span class="countdown-label">Calcolo punti tra</span>
+          <span class="countdown-time">${countdownStr}</span>
         </div>`;
 
+      // Hero con la tua posizione (solo se hai una squadra)
       if (utenteCorrente && squadraCorrente) {
         const posMia = miaPos >= 0 ? miaPos + 1 : '—';
         html += `
@@ -1321,52 +1402,57 @@
             <div class="pos-label">La tua posizione</div>
             <div class="pos-num">${posMia}</div>
             <div class="pts-big">${utenteCorrente.stagione_corrente_punti || 0} pts stagione</div>
-            ${puntiRealiMiei !== 0 ? `<div style="font-size:0.8rem;color:var(--text2);margin-top:4px">+${puntiRealiMiei} pts questa settimana</div>` : ''}
+            ${puntiLiveMiei !== 0 ? `<div style="font-size:0.8rem;color:var(--text2);margin-top:4px">Questa settimana: ${puntiLiveMiei > 0 ? '+' : ''}${puntiLiveMiei} pts (in tempo reale)</div>` : ''}
           </div>`;
 
+        // Messaggio motivazionale
         if (miaPos > 0) {
           const sopra = classificaConPunti[miaPos - 1];
           const diff = (sopra.stagione_corrente_punti || 0) - (utenteCorrente.stagione_corrente_punti || 0);
-          if (diff >= 0) {
+          if (diff > 0) {
+            const nickSopra = sopra.nickname ? `@${sopra.nickname}` : (sopra.nome || 'Chi ti precede');
             html += `<div class="motivazionale">
-              <strong>@${sopra.nickname || sopra.nome}</strong> ti supera di <strong>${diff} punti</strong>.
+              <strong>${nickSopra}</strong> ti supera di <strong>${diff} punti</strong>.
               Una gaffe dei tuoi politici questa settimana e lo scavalchi. 💪
             </div>`;
           }
         }
       }
 
+      // Top 10
       const top10 = classificaConPunti.slice(0, 10);
       html += `<p class="sezione-titolo">Top 10 classifica stagione</p>`;
       html += `<div class="card" style="padding:0;overflow:hidden"><div class="rank-list">`;
 
-      const posEmoji = ['🥇','🥈','🥉'];
-      const posClass = ['top1','top2','top3'];
-
-      top10.forEach((u, i) => {
-        const eTu = utenteCorrente && u.id === utenteCorrente.id;
-        const iniz = inizialesDa(u.nome, u.cognome);
-        const [bg, fg] = coloreAvatar(u.nickname || u.nome);
-        const livClasse = { membro: 'badge-membro', capitano: 'badge-capitano', ammiraglio: 'badge-ammiraglio' }[u.livello] || 'badge-membro';
-        html += `
-          <div class="rank-row ${eTu ? 'tu' : (posClass[i] || '')}">
-            <div class="rank-pos ${i === 0 ? 'oro' : i === 1 ? 'argento' : i === 2 ? 'bronzo' : ''}">
-              ${i < 3 ? posEmoji[i] : (i + 1)}
-            </div>
-            <div class="rank-avatar" style="background:${bg};color:${fg}">${iniz}</div>
-            <div class="rank-info">
-              <div class="rank-nick ${eTu ? 'tu-label' : ''}">@${u.nickname || u.nome}</div>
-              <span class="badge-liv ${livClasse}">${u.livello || 'membro'}</span>
-            </div>
-            <div class="rank-pts ${(u.stagione_corrente_punti || 0) > 0 ? 'high' : ''}">${u.stagione_corrente_punti || 0}</div>
-          </div>`;
-      });
+      const posEmoji = ['🥇', '🥈', '🥉'];
+      const posClass = ['top1', 'top2', 'top3'];
 
       if (!top10.length) {
         html += `<div class="empty-state"><div class="emoji">🏛️</div><p>Nessun giocatore ancora.<br>Sii il primo a scegliere la squadra!</p></div>`;
+      } else {
+        top10.forEach((u, i) => {
+          const eTu = utenteCorrente && u.id === utenteCorrente.id;
+          const iniz = inizialiDa(u.nome, u.cognome);
+          const [bg, fg] = coloreAvatar(u.nickname || u.nome);
+          const livClasse = { membro: 'badge-membro', capitano: 'badge-capitano', ammiraglio: 'badge-ammiraglio' }[u.livello] || 'badge-membro';
+          const nick = u.nickname ? `@${u.nickname}` : (u.nome || '?');
+          html += `
+            <div class="rank-row ${eTu ? 'tu' : (posClass[i] || '')}">
+              <div class="rank-pos ${i === 0 ? 'oro' : i === 1 ? 'argento' : i === 2 ? 'bronzo' : ''}">
+                ${i < 3 ? posEmoji[i] : (i + 1)}
+              </div>
+              <div class="rank-avatar" style="background:${bg};color:${fg}">${iniz}</div>
+              <div class="rank-info">
+                <div class="rank-nick ${eTu ? 'tu-label' : ''}">${nick}</div>
+                <span class="badge-liv ${livClasse}">${u.livello || 'membro'}</span>
+              </div>
+              <div class="rank-pts ${(u.puntiTotali) > 0 ? 'high' : ''}">${u.puntiTotali}</div>
+            </div>`;
+        });
       }
       html += `</div></div>`;
 
+      // Sezione "intorno a te" (se non sei nella top 10)
       if (utenteCorrente && miaPos >= 10) {
         const inizio = Math.max(0, miaPos - 2);
         const fine = Math.min(classificaConPunti.length, miaPos + 3);
@@ -1377,18 +1463,19 @@
         intorno.forEach((u, idx) => {
           const posReale = inizio + idx + 1;
           const eTu = utenteCorrente && u.id === utenteCorrente.id;
-          const iniz = inizialesDa(u.nome, u.cognome);
+          const iniz = inizialiDa(u.nome, u.cognome);
           const [bg, fg] = coloreAvatar(u.nickname || u.nome);
           const livClasse = { membro: 'badge-membro', capitano: 'badge-capitano', ammiraglio: 'badge-ammiraglio' }[u.livello] || 'badge-membro';
+          const nick = u.nickname ? `@${u.nickname}` : (u.nome || '?');
           html += `
             <div class="rank-row ${eTu ? 'tu' : ''}">
               <div class="rank-pos">${posReale}</div>
               <div class="rank-avatar" style="background:${bg};color:${fg}">${iniz}</div>
               <div class="rank-info">
-                <div class="rank-nick ${eTu ? 'tu-label' : ''}">@${u.nickname || u.nome}</div>
+                <div class="rank-nick ${eTu ? 'tu-label' : ''}">${nick}</div>
                 <span class="badge-liv ${livClasse}">${u.livello || 'membro'}</span>
               </div>
-              <div class="rank-pts ${(u.stagione_corrente_punti || 0) > 0 ? 'high' : ''}">${u.stagione_corrente_punti || 0}</div>
+              <div class="rank-pts ${(u.puntiTotali) > 0 ? 'high' : ''}">${u.puntiTotali}</div>
             </div>`;
         });
         html += `</div></div>`;
@@ -1398,8 +1485,8 @@
       loading.style.display = 'none';
       contenuto.style.display = 'block';
 
-    } catch(e) {
-      loading.innerHTML = `<p style="color:var(--rosso)">Errore: ${e.message}</p>`;
+    } catch (e) {
+      loading.innerHTML = `<p style="color:var(--rosso);padding:20px">Errore caricamento classifica: ${e.message}</p>`;
     }
   }
 
@@ -1418,24 +1505,36 @@
         return;
       }
 
+      // Nessuna squadra ancora
       if (!squadraCorrente || !squadraCorrente.politici?.length) {
         loading.style.display = 'none';
         contenuto.style.display = 'block';
-        contenuto.innerHTML = `
-          <p class="sezione-titolo">I tuoi 8 politici questa settimana</p>
-          <div class="cta-squadra">
-            <div class="emoji">🎯</div>
-            <h2>Nessuna squadra ancora!</h2>
-            <p>Scegli i tuoi 8 politici dal roster di questa settimana. Hai 100 Lire da spendere.</p>
-            <button class="btn-cta" onclick="apriMercato()">Scegli la squadra →</button>
-          </div>`;
+        if (mercatoAperto()) {
+          contenuto.innerHTML = `
+            <p class="sezione-titolo">I tuoi 8 politici questa settimana</p>
+            <div class="cta-squadra">
+              <div class="emoji">🎯</div>
+              <h2>Nessuna squadra ancora!</h2>
+              <p>Scegli i tuoi 8 politici dal roster di questa settimana. Hai 100 Lire da spendere.</p>
+              <button class="btn-cta" onclick="apriMercato()">Scegli la squadra →</button>
+            </div>`;
+        } else {
+          contenuto.innerHTML = `
+            <p class="sezione-titolo">I tuoi 8 politici questa settimana</p>
+            <div class="mercato-chiuso-banner">
+              <span class="icona">🔒</span>
+              <span>Non hai selezionato la squadra questo turno. Il mercato riaprirà sabato.</span>
+            </div>`;
+        }
         return;
       }
 
+      // Carica i politici della squadra
       const ids = squadraCorrente.politici.join(',');
       const politici = await db(`politici?id=in.(${ids})&select=id,nome,cognome,partito,ruolo_attuale,costo_lire`);
       const mapPol = Object.fromEntries(politici.map(p => [p.id, p]));
 
+      // Carica gli eventi di questa settimana per i suoi politici
       const eventi = await db(`eventi?approvato=eq.true&settimana=eq.${settimanaCorrente}&politico_id=in.(${ids})`);
       const puntiByCap = {};
       eventi.forEach(e => {
@@ -1443,39 +1542,55 @@
         puntiByCap[e.politico_id] += e.punti;
       });
 
+      // Calcola totale
       let totale = 0;
-      let html = `<p class="sezione-titolo">I tuoi 8 politici questa settimana</p>`;
-
       squadraCorrente.politici.forEach(pid => {
         const punti = puntiByCap[pid] || 0;
-        const isCapPol = pid === squadraCorrente.capitano_politico_id;
-        totale += isCapPol ? punti * 2 : punti;
+        const isCap = pid === squadraCorrente.capitano_politico_id;
+        totale += isCap ? punti * 2 : punti;
       });
 
+      let html = `<p class="sezione-titolo">I tuoi 8 politici questa settimana</p>`;
+
+      // Banner mercato aperto — puoi ancora modificare
+      if (mercatoAperto()) {
+        html += `
+          <div style="background:rgba(0,146,70,0.1);border:1px solid rgba(0,146,70,0.2);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:0.82rem;color:#4dbb84">
+            <span>✏️</span>
+            <span>Il mercato è ancora aperto. <strong style="cursor:pointer;text-decoration:underline" onclick="apriMercato()">Modifica la squadra →</strong></span>
+          </div>`;
+      } else {
+        html += `
+          <div class="mercato-chiuso-banner">
+            <span class="icona">🔒</span>
+            <span>Rosa bloccata. Nessuna modifica possibile fino a sabato.</span>
+          </div>`;
+      }
+
       html += `<div class="totale-bar">
-        <span class="totale-label">Punti totali questa settimana</span>
+        <span class="totale-label">Punti totali questa settimana (live)</span>
         <span class="totale-pts">${totale} pts</span>
       </div>`;
 
       squadraCorrente.politici.forEach(pid => {
         const p = mapPol[pid];
         if (!p) return;
-        const isCapPol = pid === squadraCorrente.capitano_politico_id;
+        const isCap = pid === squadraCorrente.capitano_politico_id;
         const puntiBase = puntiByCap[pid] || 0;
-        const puntiFinali = isCapPol ? puntiBase * 2 : puntiBase;
-        const iniz = inizialesDa(p.nome, p.cognome);
+        const puntiFinali = isCap ? puntiBase * 2 : puntiBase;
+        const iniz = inizialiDa(p.nome, p.cognome);
         const cls = puntiFinali > 0 ? 'positivo' : puntiFinali < 0 ? 'negativo' : 'zero';
         const ptsCls = puntiFinali > 0 ? 'pos' : puntiFinali < 0 ? 'neg' : 'zero';
         const ptsStr = puntiFinali === 0 ? '0 pts' : (puntiFinali > 0 ? '+' : '') + puntiFinali + ' pts';
         html += `
-          <div class="politico-card ${cls} ${isCapPol ? 'capitano' : ''}">
-            <div class="pol-iniziali ${isCapPol ? 'cap' : ''}">${iniz}</div>
+          <div class="politico-card ${cls} ${isCap ? 'capitano' : ''}">
+            <div class="pol-iniziali ${isCap ? 'cap' : ''}">${iniz}</div>
             <div class="pol-info">
               <div class="pol-nome">
                 ${p.cognome} ${p.nome.charAt(0)}.
-                ${isCapPol ? '<span class="cap-badge">CAPITANO ×2</span>' : ''}
+                ${isCap ? '<span class="cap-badge">CAPITANO ×2</span>' : ''}
               </div>
-              <div class="pol-sub">${p.ruolo_attuale || p.partito || '—'} · ${p.costo_lire} Lire</div>
+              <div class="pol-sub">${p.ruolo_attuale || p.partito || '—'} · ${p.costo_lire || '?'} Lire</div>
             </div>
             <div class="pol-pts ${ptsCls}">${ptsStr}</div>
           </div>`;
@@ -1489,8 +1604,8 @@
       loading.style.display = 'none';
       contenuto.style.display = 'block';
 
-    } catch(e) {
-      loading.innerHTML = `<p style="color:var(--rosso)">Errore: ${e.message}</p>`;
+    } catch (e) {
+      loading.innerHTML = `<p style="color:var(--rosso);padding:20px">Errore: ${e.message}</p>`;
     }
   }
 
@@ -1506,12 +1621,12 @@
     try {
       const eventi = await db(`eventi?approvato=eq.true&settimana=eq.${settimanaCorrente}&order=created_at.desc`);
 
+      let html = `<p class="sezione-titolo">Tutti gli eventi verificati questa settimana</p>`;
+
       if (!eventi.length) {
         loading.style.display = 'none';
         contenuto.style.display = 'block';
-        contenuto.innerHTML = `
-          <p class="sezione-titolo">Tutti gli eventi verificati questa settimana</p>
-          <div class="empty-state"><div class="emoji">📭</div><p>Nessun evento approvato questa settimana ancora.<br>Controlla più tardi!</p></div>`;
+        contenuto.innerHTML = html + `<div class="empty-state"><div class="emoji">📭</div><p>Nessun evento approvato questa settimana ancora.<br>Controlla più tardi!</p></div>`;
         return;
       }
 
@@ -1522,52 +1637,51 @@
       const miaSquadraIds = new Set(squadraCorrente?.politici || []);
       const mioCapitano = squadraCorrente?.capitano_politico_id;
 
-      let html = `<p class="sezione-titolo">Tutti gli eventi verificati questa settimana</p>`;
       html += `<div class="card" style="padding:16px">`;
 
       eventi.forEach(e => {
         const pol = mapPol[e.politico_id];
         const nomePol = pol ? `${pol.cognome} ${pol.nome.charAt(0)}.` : '?';
         const isMio = miaSquadraIds.has(e.politico_id);
-        const isCapMio = e.politico_id === mioCapitano;
-        const ptsFinali = isCapMio ? e.punti * 2 : e.punti;
+        const isMioCap = e.politico_id === mioCapitano;
+        const ptsFinali = isMioCap ? e.punti * 2 : e.punti;
         const ptsStr = (ptsFinali > 0 ? '+' : '') + ptsFinali + ' pts';
         const ptsCls = ptsFinali > 0 ? 'pos' : 'neg';
 
-        const dataStr = new Date(e.settimana + 'T00:00:00').toLocaleDateString('it-IT', { weekday:'short', day:'numeric', month:'short' });
-
         let tagHtml = '';
-        if (isMio && isCapMio) {
+        if (isMio && isMioCap) {
           tagHtml = `<span class="evento-tag tag-tua-cap">nella tua squadra ×2 capitano</span>`;
         } else if (isMio && ptsFinali < 0) {
           tagHtml = `<span class="evento-tag tag-tua-penalita">nella tua squadra — penalità</span>`;
         } else if (isMio) {
           tagHtml = `<span class="evento-tag tag-tua">nella tua squadra</span>`;
         } else {
-          tagHtml = `<span class="tag-non-tua">non nella tua squadra</span>`;
+          tagHtml = `<span class="tag-non-tua">non in squadra</span>`;
         }
 
         const label = tipoLabel(e.tipo_evento);
+        const dataStr = new Date(e.settimana + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+
         html += `
           <div class="evento-row">
             <div class="evento-header">
               <div class="evento-titolo">${nomePol} — ${label}</div>
               <div class="evento-pts ${ptsCls}">${ptsStr}</div>
             </div>
-            <div class="evento-meta">${dataStr} · ${e.fonte_url || '—'}</div>
+            <div class="evento-meta">${dataStr}${e.fonte_url ? ` · <a href="${e.fonte_url}" target="_blank" style="color:var(--text3);font-size:0.72rem">fonte →</a>` : ''}</div>
             ${tagHtml}
           </div>`;
       });
 
       html += `</div>`;
-      html += `<div class="nota-eventi">Vedi tutti gli eventi di tutti i politici. I punti sono già calcolati con il moltiplicatore Capitano ×2.</div>`;
+      html += `<div class="nota-eventi">I punti sono già calcolati con il moltiplicatore Capitano ×2 per i tuoi politici.</div>`;
 
       contenuto.innerHTML = html;
       loading.style.display = 'none';
       contenuto.style.display = 'block';
 
-    } catch(e) {
-      loading.innerHTML = `<p style="color:var(--rosso)">Errore: ${e.message}</p>`;
+    } catch (e) {
+      loading.innerHTML = `<p style="color:var(--rosso);padding:20px">Errore: ${e.message}</p>`;
     }
   }
 
@@ -1610,6 +1724,7 @@
 
       const tutti_membri = await db('membri_brigata?select=user_id,brigata_id');
       const userIds = [...new Set(tutti_membri.map(m => m.user_id))];
+
       let mapPuntiUtente = {};
       if (userIds.length) {
         const utenti = await db(`users?id=in.(${userIds.join(',')})&select=id,nickname,nome,cognome,stagione_corrente_punti,livello`);
@@ -1652,7 +1767,7 @@
         brigadeOrdinate.forEach((b, i) => {
           const isMia = b.id === miaBrigataId;
           const cap = mapPuntiUtente[b.capitano_id];
-          const capNome = cap ? (cap.nickname || `${cap.nome} ${cap.cognome?.charAt(0)}.`) : '?';
+          const capNome = cap ? (cap.nickname ? `@${cap.nickname}` : `${cap.nome} ${cap.cognome?.charAt(0)}.`) : '?';
           const nMembri = membriBrigata[b.id]?.length || 0;
           const pts = puntiBrigata[b.id] || 0;
           html += `
@@ -1673,6 +1788,7 @@
         html += `<div class="empty-state"><div class="emoji">⚓</div><p>Nessuna brigata ancora.<br>Sii il primo Capitano!</p></div>`;
       }
 
+      // Dettaglio brigata personale
       if (miaBrigataId && membriBrigata[miaBrigataId]?.length) {
         const miaBrig = brigate.find(b => b.id === miaBrigataId);
         html += `<div class="dettaglio-brigata">`;
@@ -1684,15 +1800,16 @@
           .sort((a, b) => (b.stagione_corrente_punti || 0) - (a.stagione_corrente_punti || 0));
 
         membriOrdinati.forEach(u => {
-          const iniz = inizialesDa(u.nome, u.cognome);
+          const iniz = inizialiDa(u.nome, u.cognome);
           const [bg, fg] = coloreAvatar(u.nickname || u.nome);
-          const isCapitano = brigate.find(b => b.id === miaBrigataId)?.capitano_id === u.id;
+          const isCapBrig = brigate.find(b => b.id === miaBrigataId)?.capitano_id === u.id;
+          const nick = u.nickname ? `@${u.nickname}` : (u.nome || '?');
           html += `
             <div class="membro-row">
               <div class="membro-avatar" style="background:${bg};color:${fg}">${iniz}</div>
               <div class="membro-nome">
-                ${u.nickname || u.nome}
-                ${isCapitano ? '<span class="cap-badge">Capitano</span>' : ''}
+                ${nick}
+                ${isCapBrig ? '<span class="cap-badge">Capitano</span>' : ''}
               </div>
               <div class="membro-pts">${u.stagione_corrente_punti || 0} pts</div>
             </div>`;
@@ -1700,14 +1817,14 @@
         html += `</div></div>`;
       }
 
-      html += `<div class="nota-brigate">Vedi nome, capitano, membri e punteggio totale di ogni brigata. I politici scelti e i dettagli interni sono visibili solo nella tua brigata.</div>`;
+      html += `<div class="nota-brigate">Vedi nome, capitano e punteggio totale di ogni brigata. I dettagli interni sono visibili solo nella tua brigata.</div>`;
 
       contenuto.innerHTML = html;
       loading.style.display = 'none';
       contenuto.style.display = 'block';
 
-    } catch(e) {
-      loading.innerHTML = `<p style="color:var(--rosso)">Errore: ${e.message}</p>`;
+    } catch (e) {
+      loading.innerHTML = `<p style="color:var(--rosso);padding:20px">Errore: ${e.message}</p>`;
     }
   }
 
@@ -1723,14 +1840,12 @@
       return;
     }
 
-    // Link personale dell'utente
     const linkPersonale = `https://fantagaffe.github.io/fantagaffe/invito.html?ref=${utenteCorrente.invite_code || utenteCorrente.id}`;
 
-    // Carica inviti già inviati
     let inviti = [];
     try {
       inviti = await dbAuth(`inviti?invitante_id=eq.${utenteCorrente.id}&order=created_at.desc`);
-    } catch(e) {}
+    } catch (e) {}
 
     let html = `<p class="sezione-titolo">Invita i tuoi amici</p>`;
 
@@ -1738,30 +1853,33 @@
     html += `
       <div class="invito-link-box">
         <p>Il tuo link personale — condividilo direttamente:</p>
-        <div class="invito-link-text" id="link-testo">${linkPersonale}</div>
-        <button class="btn-copia" onclick="copiaLink('${linkPersonale}')">📋 Copia link</button>
+        <div class="invito-link-text">${linkPersonale}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-copia" onclick="copiaLink('${linkPersonale}')">📋 Copia link</button>
+          <button class="btn-copia" style="background:rgba(37,211,102,0.12);border-color:rgba(37,211,102,0.3);color:#25d366" onclick="mandaWhatsappDiretto('${linkPersonale}')">💬 WhatsApp</button>
+        </div>
       </div>`;
 
-    // Form nuovo invito
+    // Form nuovo invito email
     html += `
       <div class="invito-form">
-        <h3>➕ Genera link di invito</h3>
-        <p>Inserisci nome e email del tuo amico. Gli mandiamo un'email con il link — puoi anche mandarglielo su WhatsApp.</p>
+        <h3>✉️ Invita via email</h3>
+        <p>Inserisci nome e email del tuo amico. Gli mandiamo un link personalizzato.</p>
         <input class="invito-input" id="invito-nome" type="text" placeholder="Nome dell'amico" autocomplete="off" />
         <input class="invito-input" id="invito-email" type="email" placeholder="Email dell'amico" autocomplete="off" />
         <button class="btn-invita" id="btn-invita" onclick="mandaInvito()">Invia invito →</button>
         <div id="msg-invito" style="margin-top:10px;font-size:0.82rem;display:none"></div>
         <div id="box-link-generato" style="display:none;margin-top:14px;background:var(--bg3);border:1px solid rgba(245,197,24,0.3);border-radius:var(--radius-sm);padding:14px">
-          <div style="font-size:0.75rem;color:var(--text2);margin-bottom:8px">✅ Link generato per <strong id="nome-link-generato"></strong> — copialo e mandaglielo!</div>
+          <div style="font-size:0.75rem;color:var(--text2);margin-bottom:8px">✅ Invito per <strong id="nome-link-generato"></strong> — copialo o mandalo su WhatsApp</div>
           <div id="testo-link-generato" style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--oro);word-break:break-all;line-height:1.5;margin-bottom:10px"></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn-copia" id="btn-copia-link-gen" onclick="copiaLinkGenerato()">📋 Copia link</button>
-            <button class="btn-copia" id="btn-whatsapp-link-gen" style="background:rgba(37,211,102,0.12);border-color:rgba(37,211,102,0.3);color:#25d366" onclick="mandaWhatsapp()">💬 Apri WhatsApp</button>
+            <button class="btn-copia" onclick="copiaLinkGenerato()">📋 Copia link</button>
+            <button class="btn-copia" style="background:rgba(37,211,102,0.12);border-color:rgba(37,211,102,0.3);color:#25d366" onclick="mandaWhatsappGenerato()">💬 WhatsApp</button>
           </div>
         </div>
       </div>`;
 
-    // Lista inviti già inviati
+    // Lista inviti inviati
     if (inviti.length) {
       html += `<p class="sezione-titolo">I tuoi inviti (${inviti.length})</p>`;
       html += `<div class="card" style="padding:0 16px;overflow:hidden">`;
@@ -1786,23 +1904,34 @@
     contenuto.innerHTML = html;
   }
 
+  let _linkGeneratoCorrente = '';
+
   function copiaLink(link) {
-    navigator.clipboard.writeText(link).then(() => {
-      toast('✅ Link copiato!', 'ok');
-    }).catch(() => {
-      // Fallback per browser che non supportano clipboard
-      const el = document.createElement('textarea');
-      el.value = link;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
-      toast('✅ Link copiato!', 'ok');
-    });
+    navigator.clipboard.writeText(link)
+      .then(() => toast('✅ Link copiato!', 'ok'))
+      .catch(() => {
+        const el = document.createElement('textarea');
+        el.value = link;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        toast('✅ Link copiato!', 'ok');
+      });
   }
 
-  // Variabile globale per il link appena generato (usata da copiaLinkGenerato e mandaWhatsapp)
-  let _linkGeneratoCorrente = '';
+  function copiaLinkGenerato() {
+    if (_linkGeneratoCorrente) copiaLink(_linkGeneratoCorrente);
+  }
+
+  function mandaWhatsappDiretto(link) {
+    const testo = encodeURIComponent('Ciao! Ti invito a giocare a FantaGaffe — il fantasy game sulla politica italiana 🇮🇹\n\nRegistrati qui: ' + link);
+    window.open('https://wa.me/?text=' + testo, '_blank');
+  }
+
+  function mandaWhatsappGenerato() {
+    if (_linkGeneratoCorrente) mandaWhatsappDiretto(_linkGeneratoCorrente);
+  }
 
   async function mandaInvito() {
     const nome = document.getElementById('invito-nome').value.trim();
@@ -1810,8 +1939,8 @@
     const msg = document.getElementById('msg-invito');
     const btn = document.getElementById('btn-invita');
 
-    if (!nome) { mostraMsg(msg, 'Inserisci il nome dell\'amico.', 'err'); return; }
-    if (!email || !email.includes('@')) { mostraMsg(msg, 'Inserisci un\'email valida.', 'err'); return; }
+    if (!nome) { mostraMsg(msg, "Inserisci il nome dell'amico.", 'err'); return; }
+    if (!email || !email.includes('@')) { mostraMsg(msg, "Inserisci un'email valida.", 'err'); return; }
 
     btn.disabled = true;
     btn.textContent = 'Invio in corso...';
@@ -1819,10 +1948,8 @@
     document.getElementById('box-link-generato').style.display = 'none';
 
     try {
-      // Genera token univoco
       const token = 'INV' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
 
-      // Salva invito nel database
       await dbAuth('inviti', {
         method: 'POST',
         prefer: 'return=minimal',
@@ -1834,7 +1961,6 @@
         }
       });
 
-      // Chiama la Edge Function per mandare l'email
       const nomeInvitante = utenteCorrente.nickname || utenteCorrente.nome || 'Un amico';
       const edgeRes = await fetch(`${SUPABASE_URL}/functions/v1/invia-invito`, {
         method: 'POST',
@@ -1850,59 +1976,32 @@
         })
       });
 
-      const edgeData = await edgeRes.json();
-
-      // Costruisce il link corretto verso invito.html
+      const edgeData = await edgeRes.json().catch(() => ({}));
       const linkInvito = `https://fantagaffe.github.io/fantagaffe/invito.html?token=${token}`;
       _linkGeneratoCorrente = linkInvito;
 
-      // Mostra il box con il link da copiare (sempre, anche se email ok)
       document.getElementById('nome-link-generato').textContent = nome;
       document.getElementById('testo-link-generato').textContent = linkInvito;
       document.getElementById('box-link-generato').style.display = 'block';
 
       if (edgeData.ok) {
-        mostraMsg(msg, `✅ Email inviata a ${nome}! Puoi anche mandargli il link qui sotto su WhatsApp.`, 'ok');
+        mostraMsg(msg, `✅ Email inviata a ${nome}! Puoi anche condividere il link su WhatsApp.`, 'ok');
       } else {
-        mostraMsg(msg, `⚠️ Email non inviata (${edgeData.error || 'errore'}). Usa il link qui sotto per mandarlo su WhatsApp.`, 'err');
+        mostraMsg(msg, `⚠️ Email non inviata. Usa il link qui sotto per mandarlo su WhatsApp.`, 'err');
       }
 
-      // Svuota i campi del form
       document.getElementById('invito-nome').value = '';
       document.getElementById('invito-email').value = '';
-
       btn.disabled = false;
       btn.textContent = 'Invia invito →';
 
-      // Ricarica la lista inviti in fondo
-      setTimeout(() => caricaInviti(), 1000);
+      setTimeout(() => caricaInviti(), 1200);
 
-    } catch(e) {
+    } catch (e) {
       mostraMsg(msg, 'Errore: ' + e.message, 'err');
       btn.disabled = false;
       btn.textContent = 'Invia invito →';
     }
-  }
-
-  function copiaLinkGenerato() {
-    if (!_linkGeneratoCorrente) return;
-    navigator.clipboard.writeText(_linkGeneratoCorrente).then(() => {
-      toast('✅ Link copiato!', 'ok');
-    }).catch(() => {
-      const el = document.createElement('textarea');
-      el.value = _linkGeneratoCorrente;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
-      toast('✅ Link copiato!', 'ok');
-    });
-  }
-
-  function mandaWhatsapp() {
-    if (!_linkGeneratoCorrente) return;
-    const testo = encodeURIComponent('Ciao! Ti invito a giocare a FantaGaffe — il fantasy game sulla politica italiana 🇮🇹\n\nRegistrati qui: ' + _linkGeneratoCorrente);
-    window.open('https://wa.me/?text=' + testo, '_blank');
   }
 
   function mostraMsg(el, testo, tipo) {
@@ -1915,9 +2014,21 @@
   // MERCATO
   // ─────────────────────────────────────────────
   async function apriMercato() {
+    // FIX 1: Blocco mercato lunedì→venerdì
+    if (!mercatoAperto()) {
+      toast('🔒 Mercato chiuso. Si riapre sabato!', 'err');
+      return;
+    }
+
     const mercato = document.getElementById('view-mercato');
     mercato.classList.add('aperto');
     mercatoScelti = [];
+
+    // Se ha già una squadra, precarica le sue scelte
+    if (squadraCorrente?.politici?.length) {
+      // Verrà popolato dopo il caricamento del roster
+    }
+
     aggiornaUIBudget();
 
     const lista = document.getElementById('mercato-lista');
@@ -1935,8 +2046,21 @@
 
       rosterDisponibile = politici.map(p => ({ ...p, costo_lire: mapCosto[p.id] || 10 }));
 
+      // Se ha già una squadra salvata, precarica la selezione
+      if (squadraCorrente?.politici?.length) {
+        const capId = squadraCorrente.capitano_politico_id;
+        mercatoScelti = squadraCorrente.politici
+          .map(pid => {
+            const pol = rosterDisponibile.find(p => p.id === pid);
+            return pol ? { ...pol, capitano: pid === capId } : null;
+          })
+          .filter(Boolean);
+        aggiornaUIBudget();
+        renderChips();
+      }
+
       renderRoster();
-    } catch(e) {
+    } catch (e) {
       lista.innerHTML = `<p style="color:var(--rosso);padding:20px">Errore: ${e.message}</p>`;
     }
   }
@@ -1973,7 +2097,6 @@
   function togglePoliticoMercato(id) {
     const pol = rosterDisponibile.find(p => p.id === id);
     if (!pol) return;
-
     const idx = mercatoScelti.findIndex(s => s.id === id);
 
     if (idx === -1) {
@@ -1982,13 +2105,12 @@
       if (budgetSpeso + pol.costo_lire > 100) { toast('Budget insufficiente!', 'err'); return; }
       mercatoScelti.push({ ...pol, capitano: false });
     } else if (!mercatoScelti[idx].capitano) {
-      const haCapitano = mercatoScelti.some(p => p.capitano);
-      if (haCapitano) {
-        mercatoScelti = mercatoScelti.map(p => ({ ...p, capitano: false }));
-      }
+      // Rimuovi precedente capitano se c'era
+      mercatoScelti = mercatoScelti.map(p => ({ ...p, capitano: false }));
       mercatoScelti[idx].capitano = true;
-      toast('Capitano nominato! Vale doppio. ★', 'ok');
+      toast('★ Capitano nominato! Vale doppio.', 'ok');
     } else {
+      // Era già capitano → rimuovi dalla squadra
       mercatoScelti.splice(idx, 1);
     }
 
@@ -2008,7 +2130,7 @@
       ? `Scegli <strong>${8 - mercatoScelti.length}</strong> politici ancora. Budget: <strong style="color:var(--oro)">${100 - speso} Lire</strong>.`
       : !haCapitano
         ? `<strong style="color:var(--oro)">Tocca un politico selezionato per nominarlo Capitano ×2!</strong>`
-        : `Squadra pronta! Conferma per bloccare la rosa fino a lunedì.`;
+        : `✅ Squadra pronta! Conferma per bloccare la rosa fino a sabato.`;
   }
 
   function renderChips() {
@@ -2016,13 +2138,22 @@
     el.innerHTML = mercatoScelti.map(p =>
       `<span class="chip-pol ${p.capitano ? 'cap' : ''}">
         ${p.capitano ? '★ ' : ''}${p.cognome}
-        <span class="remove" onclick="togglePoliticoMercato('${p.id}')">×</span>
+        <span class="remove" onclick="event.stopPropagation();togglePoliticoMercato('${p.id}')">×</span>
       </span>`
     ).join('');
   }
 
+  // FIX 2: Upsert corretto — cancella la riga esistente e reinserisci
   async function confermaSquadra() {
     if (!utenteCorrente) { toast('Accedi prima!', 'err'); return; }
+
+    // Blocco sicurezza: double-check lato client
+    if (!mercatoAperto()) {
+      toast('🔒 Mercato chiuso. Non puoi modificare la squadra adesso.', 'err');
+      chiudiMercato();
+      return;
+    }
+
     const haCapitano = mercatoScelti.some(p => p.capitano);
     if (mercatoScelti.length !== 8 || !haCapitano) return;
 
@@ -2034,9 +2165,19 @@
       const capitanoId = mercatoScelti.find(p => p.capitano).id;
       const ids = mercatoScelti.map(p => p.id);
 
+      // FIX: prima cancella la riga esistente per questa settimana (se c'è)
+      // poi inserisci la nuova — evita duplicati al 100%
+      if (squadraCorrente) {
+        await dbAuth(`squadre?user_id=eq.${utenteCorrente.id}&settimana=eq.${settimanaCorrente}`, {
+          method: 'DELETE',
+          prefer: 'return=minimal'
+        });
+      }
+
+      // Inserisci la nuova squadra
       await dbAuth('squadre', {
         method: 'POST',
-        prefer: 'resolution=merge-duplicates,return=minimal',
+        prefer: 'return=minimal',
         body: {
           user_id: utenteCorrente.id,
           settimana: settimanaCorrente,
@@ -2053,8 +2194,8 @@
       caricaSquadra();
       caricaClassifica();
 
-    } catch(e) {
-      toast('Errore: ' + e.message, 'err');
+    } catch (e) {
+      toast('Errore nel salvataggio: ' + e.message, 'err');
       btn.disabled = false;
       btn.textContent = 'Conferma squadra';
     }
@@ -2068,6 +2209,11 @@
   // START
   // ─────────────────────────────────────────────
   init();
+
+  // PWA — registra service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/fantagaffe/sw.js').catch(() => {});
+  }
 </script>
 </body>
 </html>
