@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FantaGaffe – Accetta il tuo invito</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FantaGaffe" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -102,6 +111,11 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa3JkanFxZXJhZGdzdWNyZmliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNDE2NTAsImV4cCI6MjA5MDkxNzY1MH0.wxfwYednaNxhdpDLKZWuvrTLIt8clVHvmnhgTj8cqtA';
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // Registra service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/fantagaffe/sw.js').catch(() => {});
+  }
+
   let tokenInvito = null;
   let invitanteId = null;
   let flusso = null;
@@ -118,7 +132,6 @@
     }
 
     if (token) {
-      // ── FLUSSO EMAIL (non toccare) ──────────────────────────────────────
       flusso = 'email';
       tokenInvito = token;
 
@@ -148,8 +161,7 @@
       emailInput.value = data.email_invitato;
       emailInput.readOnly = true;
 
-      // Recupera il nome dell'invitante per il flusso email
-      let nomeInvitanteEmail = 'un amico';
+      let nomeInvitante = 'un amico';
       if (invitanteId) {
         const { data: userData } = await supabase
           .from('users')
@@ -157,15 +169,14 @@
           .eq('id', invitanteId)
           .single();
         if (userData) {
-          nomeInvitanteEmail = userData.nickname || userData.nome || 'un amico';
+          nomeInvitante = userData.nickname || userData.nome || 'un amico';
         }
       }
       document.getElementById('msg-invito').innerHTML =
-        'Sei stato invitato da <strong>' + nomeInvitanteEmail + '</strong> a entrare in FantaGaffe!';
+        'Sei stato invitato da <strong>' + nomeInvitante + '</strong> a entrare in FantaGaffe!';
       document.getElementById('contenuto').style.display = 'block';
 
     } else {
-      // ── FLUSSO WHATSAPP ─────────────────────────────────────────────────
       flusso = 'whatsapp';
 
       const { data, error } = await supabase
@@ -174,7 +185,7 @@
       document.getElementById('stato-caricamento').style.display = 'none';
 
       if (error || !data) {
-        mostraErrore('Link non valido. Chiedi un nuovo link all\'amico che ti ha invitato.');
+        mostraErrore("Link non valido. Chiedi un nuovo link all'amico che ti ha invitato.");
         return;
       }
 
